@@ -3,15 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { ExportPdfButton } from "./ExportPdfButton";
 
 interface Props {
   status: GlobalStatus;
   onReviewClick?: () => void;
+  onExportClick?: () => void;
+  exportDisabled?: boolean;
+  exporting?: boolean;
 }
 
-export function Header({ status, onReviewClick }: Props) {
+export function Header({ status, onReviewClick, onExportClick, exportDisabled, exporting }: Props) {
   return (
-    <header className="flex items-center h-12 w-full bg-background border-b border-border">
+    <header className="no-print flex items-center h-12 w-full bg-background border-b border-border">
       <div className="pl-5 pr-4">
         <span className="font-mono font-extrabold text-foreground text-[13px] tracking-[0.3em]">
           PRAXIS
@@ -33,6 +37,13 @@ export function Header({ status, onReviewClick }: Props) {
           >
             ◆ Review Plan
           </Button>
+        )}
+        {onExportClick && (
+          <ExportPdfButton
+            onClick={onExportClick}
+            disabled={exportDisabled}
+            exporting={exporting}
+          />
         )}
         <StatusPill status={status} />
       </div>
