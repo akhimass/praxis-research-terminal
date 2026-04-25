@@ -13,7 +13,7 @@ export function Header({ status, onReviewClick }: Props) {
   return (
     <header className="flex items-center h-12 w-full bg-background border-b border-border">
       <div className="pl-5 pr-4">
-        <span className="font-mono font-extrabold text-ax-green text-[13px] tracking-[0.3em]">
+        <span className="font-mono font-extrabold text-foreground text-[13px] tracking-[0.3em]">
           PRAXIS
         </span>
       </div>

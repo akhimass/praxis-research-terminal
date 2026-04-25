@@ -10,7 +10,7 @@ const TILES = [
 export function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-[60vh]">
-      <h1 className="font-mono font-extrabold text-card text-[80px] tracking-[0.15em] leading-none select-none">
+      <h1 className="font-mono font-extrabold text-foreground text-[80px] tracking-[0.15em] leading-none select-none">
         PRAXIS
       </h1>
       <p className="mt-3 mb-10 text-[11px] tracking-[0.2em] uppercase text-text-muted">
