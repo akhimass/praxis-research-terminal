@@ -6,6 +6,8 @@ import {
   AuditFlag,
   BudgetData,
   CodeScript,
+  FundingData,
+  FundingGrant,
   GlobalStatus,
   Paper,
   ProtocolStep,
@@ -180,7 +182,7 @@ interface State {
   protocol: ProtocolStep[];
   budget: BudgetData;
   timeline: any | null;
-  funding: any | null;
+  funding: FundingData;
   gtm: any | null;
   bioinformatics: CodeScript[];
   tamarind: TamarindData | null;
@@ -203,7 +205,7 @@ const initialState: State = {
   protocol: [],
   budget: { reagents: [], estimatedWeeks: undefined },
   timeline: null,
-  funding: null,
+  funding: { grants: [] },
   gtm: null,
   bioinformatics: [],
   tamarind: null,
@@ -224,7 +226,7 @@ type Action =
   | { type: "PROTOCOL"; steps: ProtocolStep[] }
   | { type: "REAGENTS"; data: BudgetData }
   | { type: "TIMELINE"; data: any }
-  | { type: "FUNDING"; data: any }
+  | { type: "FUNDING"; data: FundingData }
   | { type: "GTM"; data: any }
   | { type: "BIOINFORMATICS"; data: CodeScript[] }
   | { type: "TAMARIND"; data: TamarindData }
@@ -270,7 +272,7 @@ function reducer(state: State, action: Action): State {
     case "TIMELINE":
       return { ...state, timeline: action.data };
     case "FUNDING":
-      return { ...state, funding: action.data, hasData: { ...state.hasData, funding: true } };
+      return { ...state, funding: action.data, hasData: { ...state.hasData, funding: action.data.grants.length > 0 } };
     case "GTM":
       return { ...state, gtm: action.data };
     case "BIOINFORMATICS":
@@ -332,7 +334,13 @@ export function usePraxisPipeline() {
         dispatch({ type: "REAGENTS", data: { reagents, estimatedWeeks: payload?.estimatedWeeks } });
       }
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
-      if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
+      if (agent === "funding") {
+        const grants: FundingGrant[] = Array.isArray(payload?.grants)
+          ? payload.grants
+          : Array.isArray(payload?.opportunities) ? payload.opportunities
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "FUNDING", data: { grants } });
+      }
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
       if (agent === "bioinformatics") {
         const scripts: CodeScript[] = Array.isArray(payload?.scripts)
@@ -402,10 +410,7 @@ export function usePraxisPipeline() {
           dispatch({ type: "REAGENTS", data: DEMO_BUDGET });
         }
         if (agent.id === "timeline") dispatch({ type: "TIMELINE", data: { weeks: 6, milestones: 4 } });
-        if (agent.id === "funding") dispatch({ type: "FUNDING", data: { opportunities: [
-          { agency: "NIH NIAID", program: "R21 AI", amount: 275000, deadline: "2025-06-16" },
-          { agency: "Wellcome Trust", program: "Discovery Award", amount: 600000, deadline: "2025-09-01" },
-        ] } });
+        if (agent.id === "funding") dispatch({ type: "FUNDING", data: DEMO_FUNDING });
         if (agent.id === "gtm") dispatch({ type: "GTM", data: { tam: "1.2B", segments: ["clinical micro labs", "AMR surveillance"] } });
         if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: DEMO_SCRIPTS });
       });
