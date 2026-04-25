@@ -25,25 +25,19 @@ export function Praxis() {
   const anyData = Object.values(state.hasData).some(Boolean);
 
   return (
-    <div
-      className="flex flex-col h-screen w-screen text-foreground font-mono overflow-hidden"
-      style={{ background: "#050a14" }}
-    >
+    <div className="flex flex-col h-screen w-screen bg-background text-foreground font-sans overflow-hidden">
       <Header status={state.status} onReviewClick={() => setReviewOpen(true)} />
 
       <div className="flex flex-1 min-h-0">
         {/* ZONE B */}
-        <aside
-          className="flex flex-col shrink-0"
-          style={{ width: 320, background: "#08101f", borderRight: "1px solid #1a2f50" }}
-        >
+        <aside className="flex flex-col shrink-0 w-[320px] bg-surface-deep border-r border-border">
           <HypothesisInput disabled={state.status === "RUNNING"} onRun={run} />
           <AgentPanel agents={state.agents} />
           <TraceLog entries={state.trace} />
         </aside>
 
         {/* ZONE C */}
-        <main className="flex-1 flex flex-col min-w-0" style={{ background: "#050a14" }}>
+        <main className="flex-1 flex flex-col min-w-0 bg-background">
           <TabBar
             active={tab}
             onChange={setTab}
