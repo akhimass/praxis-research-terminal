@@ -3,8 +3,8 @@ import { ProtocolStep } from "../lib/types";
 import { ProtocolFlow } from "@/components/visualizations/ProtocolFlow";
 
 export function ProtocolTab({ steps }: { steps: ProtocolStep[] }) {
-  if (!steps.length) return <Empty>No protocol generated yet.</Empty>;
   const [active, setActive] = useState<number | null>(null);
+  if (!steps.length) return <Empty>No protocol generated yet.</Empty>;
   return (
     <div className="animate-praxis-fade flex flex-col gap-4">
       <ProtocolFlow
