@@ -97,6 +97,42 @@ export interface BudgetData {
   estimatedWeeks?: number;
 }
 
+export type GrantType = "FEDERAL" | "PRIVATE" | "ACADEMIC";
+export type DeadlineKind = "DATE" | "ROLLING";
+
+export interface FitCriterion {
+  label: string;          // "DISEASE AREA MATCH"
+  score: number;          // 0..100
+}
+
+export interface GrantRequirement {
+  text: string;
+  met: boolean;
+  satisfyHint?: string;   // shown when unmet
+}
+
+export interface FundingGrant {
+  id: string;
+  name: string;            // grant program / RFA name
+  organization: string;    // e.g. "NIH NIAID"
+  type: GrantType;
+  fit: number;             // 0..100
+  amountMin: number;       // USD
+  amountMax: number;       // USD
+  followOn?: number;       // optional follow-on funding USD
+  deadline: DeadlineKind;
+  deadlineDate?: string;   // ISO when DEADLINE
+  nextReview?: string;     // human label, e.g. "June 2026"
+  url?: string;
+  fitBreakdown: FitCriterion[];
+  rationale: string;       // 1–2 sentences. Highlight {{terms}} for amber.
+  requirements: GrantRequirement[];
+}
+
+export interface FundingData {
+  grants: FundingGrant[];
+}
+
 export const AGENTS: AgentMeta[] = [
   { id: "context",        index: "01", label: "CONTEXT",        color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
   { id: "literature",     index: "02", label: "LITERATURE",     color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
