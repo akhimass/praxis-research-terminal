@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { BudgetData, Reagent, ReagentPhase } from "../lib/types";
 import { AgentError } from "@/components/AgentError";
+import { ReagentOriginMap } from "@/components/visualizations/ReagentOriginMap";
+import { BudgetTimeline } from "@/components/visualizations/BudgetTimeline";
 
 const PHASE_COLOR: Record<ReagentPhase, string> = {
   1: "#fafafa",
@@ -183,6 +185,17 @@ export function BudgetTab({ data, loading, onRetry }: Props) {
         visibleTotal={visibleTotal}
         totalCount={enriched.length}
       />
+
+      {enriched.length > 0 && (
+        <div style={{ padding: "12px 20px 20px" }} className="flex flex-col gap-3">
+          <BudgetTimeline reagents={enriched} estimatedWeeks={weeks} />
+          <ReagentOriginMap
+            reagents={enriched}
+            vendorFilter={vendorFilter}
+            onVendorFilter={setVendorFilter}
+          />
+        </div>
+      )}
     </div>
   );
 }
