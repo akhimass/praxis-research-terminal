@@ -2,41 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* PRAXIS — AI Research Execution System design tokens.
+   All colors HSL. Sharp corners. No shadows (except glows). Mono everywhere.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core surfaces (PRAXIS) */
+    --background: 215 62% 5%;          /* #050a14 */
+    --foreground: 215 38% 92%;         /* #e2eaf5 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --surface: 215 62% 9%;             /* #0a1628 primary surface */
+    --surface-deep: 215 62% 7%;        /* #08101f */
+    --card: 215 60% 13%;               /* #0d1e35 */
+    --card-foreground: 215 38% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 215 60% 13%;
+    --popover-foreground: 215 38% 92%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 152 100% 43%;           /* #00d97e accent green */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 215 50% 21%;          /* #1a2f50 */
+    --secondary-foreground: 215 38% 92%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 50% 13%;
+    --muted-foreground: 210 27% 48%;   /* #5a7a9a text dim */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 215 50% 21%;
+    --accent-foreground: 215 38% 92%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 100% 65%;         /* #ff4d4d */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 215 50% 21%;             /* #1a2f50 */
+    --input: 215 50% 21%;
+    --ring: 152 100% 43%;
 
-    --radius: 0.5rem;
+    /* Accent palette */
+    --accent-green: 152 100% 43%;      /* #00d97e */
+    --accent-amber: 40 100% 47%;       /* #f0a500 */
+    --accent-red: 0 100% 65%;          /* #ff4d4d */
+    --accent-blue: 213 100% 65%;       /* #4d9fff */
+    --accent-purple: 258 100% 72%;     /* #9d6fff */
+
+    /* Text scales */
+    --text-dim: 210 27% 48%;           /* #5a7a9a */
+    --text-muted: 215 41% 27%;         /* #2a4060 */
+
+    --radius: 0px;
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +115,74 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-feature-settings: 'ss01', 'zero';
+    -webkit-font-smoothing: antialiased;
   }
+
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* PRAXIS animations */
+@layer utilities {
+  @keyframes praxis-pulse-bg {
+    0%, 100% { background-color: hsl(var(--background)); }
+    50%      { background-color: hsl(var(--card)); }
+  }
+  .animate-praxis-pulse { animation: praxis-pulse-bg 1.5s ease-in-out infinite; }
+
+  @keyframes praxis-dots {
+    0%, 20%   { opacity: 0.2; }
+    50%       { opacity: 1; }
+    80%, 100% { opacity: 0.2; }
+  }
+  .animate-praxis-dots { animation: praxis-dots 1.2s ease-in-out infinite; }
+
+  @keyframes praxis-scanline {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(2400%); }
+  }
+  .animate-scanline {
+    position: absolute; left: 0; right: 0; height: 1px;
+    background: hsl(var(--accent-amber) / 0.35);
+    animation: praxis-scanline 2.4s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes praxis-status-pulse {
+    0%, 100% { background-color: hsl(var(--accent-amber) / 0.18); }
+    50%      { background-color: hsl(var(--accent-amber) / 0.45); }
+  }
+  .animate-status-pulse { animation: praxis-status-pulse 1.4s ease-in-out infinite; }
+
+  @keyframes praxis-spin-hex { to { transform: rotate(360deg); } }
+  .animate-hex-spin { animation: praxis-spin-hex 3s linear infinite; transform-origin: center; }
+
+  @keyframes praxis-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .animate-praxis-fade { animation: praxis-fade-in 200ms ease-out; }
+
+  @keyframes praxis-log-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .animate-log-in { animation: praxis-log-in 100ms ease-out; }
+
+  .glow-green  { box-shadow: 0 0 20px hsl(var(--accent-green) / 0.13); }
+  .glow-amber  { box-shadow: 0 0 20px hsl(var(--accent-amber) / 0.13); }
+  .glow-red    { box-shadow: 0 0 20px hsl(var(--accent-red) / 0.13); }
+  .glow-blue   { box-shadow: 0 0 20px hsl(var(--accent-blue) / 0.13); }
+  .glow-purple { box-shadow: 0 0 20px hsl(var(--accent-purple) / 0.13); }
+
+  /* Custom scrollbar — terminal style */
+  .praxis-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .praxis-scroll::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  .praxis-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border)); }
+  .praxis-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-dim)); }
 }
