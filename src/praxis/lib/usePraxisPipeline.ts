@@ -246,7 +246,7 @@ export function usePraxisPipeline() {
           { agency: "Wellcome Trust", program: "Discovery Award", amount: 600000, deadline: "2025-09-01" },
         ] } });
         if (agent.id === "gtm") dispatch({ type: "GTM", data: { tam: "1.2B", segments: ["clinical micro labs", "AMR surveillance"] } });
-        if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: { snippets: 3 } });
+        if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: DEMO_SCRIPTS });
       });
     });
 
