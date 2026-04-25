@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { BudgetData, Reagent, ReagentPhase } from "../lib/types";
 
 const PHASE_COLOR: Record<ReagentPhase, string> = {
-  1: "#00d97e",
-  2: "#f0a500",
-  3: "#4d9fff",
+  1: "#fafafa",
+  2: "#a1a1a1",
+  3: "#fafafa",
 };
 const PHASE_LABEL: Record<ReagentPhase, string> = {
   1: "PHASE 1: VALIDATION",
@@ -19,8 +19,8 @@ function fmtUSD2(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function totalColor(total: number): { text: string; border: string } {
-  if (total < 500) return { text: "#00d97e", border: "#00d97e" };
-  if (total < 2000) return { text: "#f0a500", border: "#f0a500" };
+  if (total < 500) return { text: "#fafafa", border: "#fafafa" };
+  if (total < 2000) return { text: "#a1a1a1", border: "#a1a1a1" };
   return { text: "#ff4d4d", border: "#ff4d4d" };
 }
 function totalTier(total: number): "low" | "med" | "high" {
@@ -89,7 +89,7 @@ export function BudgetTab({ data, loading }: Props) {
   const weeks = data.estimatedWeeks ?? 6;
 
   const totalColorTier =
-    grandTotal < 10000 ? "#00d97e" : grandTotal < 25000 ? "#f0a500" : "#ff4d4d";
+    grandTotal < 10000 ? "#fafafa" : grandTotal < 25000 ? "#a1a1a1" : "#ff4d4d";
 
   // Filtered total for footer
   const visibleTotal = useMemo(() => sorted.reduce((s, r) => s + r.total, 0), [sorted]);
@@ -118,7 +118,7 @@ export function BudgetTab({ data, loading }: Props) {
   if (reagentCount === 0) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ minHeight: 320 }}>
-        <div className="font-mono animate-praxis-dots" style={{ fontSize: 11, color: "#5a7a9a", letterSpacing: "0.2em" }}>
+        <div className="font-mono animate-praxis-dots" style={{ fontSize: 11, color: "#a1a1a1", letterSpacing: "0.2em" }}>
           {loading ? "REAGENT AGENT RUNNING···" : "REAGENT AGENT PENDING···"}
         </div>
       </div>
@@ -128,7 +128,7 @@ export function BudgetTab({ data, loading }: Props) {
   return (
     <div
       className="flex flex-col w-full animate-praxis-fade"
-      style={{ background: "#050a14", height: "100%", minHeight: 480 }}
+      style={{ background: "#000000", height: "100%", minHeight: 480 }}
     >
       <CommandCenter
         grandTotal={grandTotal}
@@ -181,7 +181,7 @@ function CommandCenter({
   return (
     <div
       className="shrink-0"
-      style={{ background: "#0a1628", borderBottom: "1px solid #1a2f50", padding: "16px 20px" }}
+      style={{ background: "#0a0a0a", borderBottom: "1px solid #262626", padding: "16px 20px" }}
     >
       <div className="flex items-stretch">
         <Tile
@@ -192,11 +192,11 @@ function CommandCenter({
           width={220}
         />
         <Divider />
-        <Tile label="REAGENT COUNT" value={String(reagentCount)} valueColor="#4d9fff" />
+        <Tile label="REAGENT COUNT" value={String(reagentCount)} valueColor="#fafafa" />
         <Divider />
-        <Tile label="VENDORS" value={String(vendorCount)} valueColor="#4d9fff" />
+        <Tile label="VENDORS" value={String(vendorCount)} valueColor="#fafafa" />
         <Divider />
-        <Tile label="ESTIMATED WEEKS" value={String(weeks)} valueColor="#4d9fff" />
+        <Tile label="ESTIMATED WEEKS" value={String(weeks)} valueColor="#fafafa" />
 
         <div className="ml-auto flex items-center pl-4">
           <ExportButton onClick={onExport} />
@@ -217,7 +217,7 @@ function CommandCenter({
           );
         })}
       </div>
-      <div className="mt-2 flex justify-between font-mono" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.15em" }}>
+      <div className="mt-2 flex justify-between font-mono" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.15em" }}>
         {([1, 2, 3] as ReagentPhase[]).map((p) => (
           <span key={p} style={{ color: PHASE_COLOR[p] }}>
             {PHASE_LABEL[p]} · {fmtUSD(phaseTotals[p])}
@@ -242,7 +242,7 @@ function Tile({ label, value, valueColor, accent, width }: { label: string; valu
       <div className="font-mono font-extrabold" style={{ fontSize: 28, color: valueColor, lineHeight: 1.1, letterSpacing: "-0.01em" }}>
         {value}
       </div>
-      <div className="font-mono mt-1 uppercase" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.1em" }}>
+      <div className="font-mono mt-1 uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.1em" }}>
         {label}
       </div>
     </div>
@@ -250,7 +250,7 @@ function Tile({ label, value, valueColor, accent, width }: { label: string; valu
 }
 
 function Divider() {
-  return <div style={{ width: 1, background: "#1a2f50", margin: "4px 0" }} />;
+  return <div style={{ width: 1, background: "#262626", margin: "4px 0" }} />;
 }
 
 function ExportButton({ onClick }: { onClick: () => void }) {
@@ -263,14 +263,14 @@ function ExportButton({ onClick }: { onClick: () => void }) {
         height: 28,
         padding: "0 14px",
         background: "transparent",
-        border: "1px solid #1a2f50",
-        color: "#5a7a9a",
+        border: "1px solid #262626",
+        color: "#a1a1a1",
         fontSize: 10,
         letterSpacing: "0.15em",
         cursor: "pointer",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00d97e"; e.currentTarget.style.color = "#00d97e"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a2f50"; e.currentTarget.style.color = "#5a7a9a"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fafafa"; e.currentTarget.style.color = "#fafafa"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#262626"; e.currentTarget.style.color = "#a1a1a1"; }}
     >
       ↓ EXPORT CSV
     </button>
@@ -291,7 +291,7 @@ function FilterBar({
   return (
     <div
       className="shrink-0 flex items-center gap-3 px-4"
-      style={{ height: 40, background: "#050a14", borderBottom: "1px solid #1a2f50" }}
+      style={{ height: 40, background: "#000000", borderBottom: "1px solid #262626" }}
     >
       <input
         value={search}
@@ -306,16 +306,16 @@ function FilterBar({
           height: 28,
           fontSize: 10,
           letterSpacing: "0.1em",
-          color: "#e2eaf5",
+          color: "#fafafa",
           border: "none",
-          borderBottom: `1px solid ${focused ? "#00d97e" : "transparent"}`,
+          borderBottom: `1px solid ${focused ? "#fafafa" : "transparent"}`,
           padding: "0 4px",
         }}
       />
       <div className="ml-auto flex items-center gap-1.5 flex-wrap">
         {/* vendor pills */}
         {vendors.slice(0, 6).map((v) => (
-          <Pill key={v} active={vendorFilter === v} color="#4d9fff" onClick={() => onVendor(vendorFilter === v ? null : v)}>
+          <Pill key={v} active={vendorFilter === v} color="#fafafa" onClick={() => onVendor(vendorFilter === v ? null : v)}>
             {v}
           </Pill>
         ))}
@@ -327,7 +327,7 @@ function FilterBar({
         ))}
         <Sep />
         {(["low", "med", "high"] as const).map((t) => {
-          const c = t === "low" ? "#00d97e" : t === "med" ? "#f0a500" : "#ff4d4d";
+          const c = t === "low" ? "#fafafa" : t === "med" ? "#a1a1a1" : "#ff4d4d";
           return (
             <Pill key={t} active={tierFilter === t} color={c} onClick={() => onTier(tierFilter === t ? null : t)}>
               {t === "low" ? "<$500" : t === "med" ? "$500–2K" : ">$2K"}
@@ -339,7 +339,7 @@ function FilterBar({
   );
 }
 
-function Sep() { return <div style={{ width: 1, height: 16, background: "#1a2f50", margin: "0 2px" }} />; }
+function Sep() { return <div style={{ width: 1, height: 16, background: "#262626", margin: "0 2px" }} />; }
 
 function Pill({ active, color, onClick, children }: { active: boolean; color: string; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -353,8 +353,8 @@ function Pill({ active, color, onClick, children }: { active: boolean; color: st
         fontSize: 9,
         letterSpacing: "0.1em",
         background: active ? `${color}14` : "transparent",
-        border: `1px solid ${active ? color : "#1a2f50"}`,
-        color: active ? color : "#5a7a9a",
+        border: `1px solid ${active ? color : "#262626"}`,
+        color: active ? color : "#a1a1a1",
         cursor: "pointer",
       }}
     >
@@ -390,7 +390,7 @@ function ReagentTable({
   totalCount: number;
 }) {
   return (
-    <div className="flex-1 min-h-0 overflow-auto praxis-scroll" style={{ background: "#050a14" }}>
+    <div className="flex-1 min-h-0 overflow-auto praxis-scroll" style={{ background: "#000000" }}>
       <table className="w-full" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
         <colgroup>
           {COLS.map((c, i) => (
@@ -398,7 +398,7 @@ function ReagentTable({
           ))}
         </colgroup>
         <thead>
-          <tr style={{ height: 32, background: "#08101f" }}>
+          <tr style={{ height: 32, background: "#050505" }}>
             {COLS.map((c) => {
               const sortable = c.key !== "_idx";
               const active = sortable && sortKey === (c.key as SortKey);
@@ -410,21 +410,21 @@ function ReagentTable({
                   style={{
                     fontSize: 9,
                     letterSpacing: "0.15em",
-                    color: active ? "#e2eaf5" : "#2a4060",
+                    color: active ? "#fafafa" : "#404040",
                     textAlign: c.align ?? "left",
                     padding: "0 12px",
-                    borderBottom: "2px solid #1a2f50",
-                    borderRight: "1px solid #1a2f50",
+                    borderBottom: "2px solid #262626",
+                    borderRight: "1px solid #262626",
                     cursor: sortable ? "pointer" : "default",
                     position: "sticky", top: 0, zIndex: 2,
-                    background: "#08101f",
+                    background: "#050505",
                     whiteSpace: "nowrap",
                   }}
                 >
                   <span className="inline-flex items-center gap-1">
                     {c.label}
                     {sortable && (
-                      <span style={{ color: active ? "#00d97e" : "#1a2f50", fontSize: 8 }}>
+                      <span style={{ color: active ? "#fafafa" : "#262626", fontSize: 8 }}>
                         {active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
                       </span>
                     )}
@@ -447,21 +447,21 @@ function ReagentTable({
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={COLS.length} className="font-mono" style={{ padding: 24, textAlign: "center", color: "#2a4060", fontSize: 10, letterSpacing: "0.15em" }}>
+              <td colSpan={COLS.length} className="font-mono" style={{ padding: 24, textAlign: "center", color: "#404040", fontSize: 10, letterSpacing: "0.15em" }}>
                 NO REAGENTS MATCH FILTER
               </td>
             </tr>
           )}
         </tbody>
         <tfoot>
-          <tr style={{ height: 40, background: "#08101f", position: "sticky", bottom: 0, zIndex: 2 }}>
-            <td colSpan={6} className="font-mono font-extrabold" style={{ borderTop: "2px solid #1a2f50", padding: "0 12px", fontSize: 11, color: "#e2eaf5", letterSpacing: "0.15em" }}>
+          <tr style={{ height: 40, background: "#050505", position: "sticky", bottom: 0, zIndex: 2 }}>
+            <td colSpan={6} className="font-mono font-extrabold" style={{ borderTop: "2px solid #262626", padding: "0 12px", fontSize: 11, color: "#fafafa", letterSpacing: "0.15em" }}>
               TOTAL
             </td>
-            <td className="font-mono font-extrabold" style={{ borderTop: "2px solid #1a2f50", padding: "0 12px", fontSize: 14, color: "#00d97e", textAlign: "right" }}>
+            <td className="font-mono font-extrabold" style={{ borderTop: "2px solid #262626", padding: "0 12px", fontSize: 14, color: "#fafafa", textAlign: "right" }}>
               {fmtUSD(visibleTotal)}
             </td>
-            <td className="font-mono" style={{ borderTop: "2px solid #1a2f50", padding: "0 12px", fontSize: 9, color: "#2a4060", textAlign: "center", letterSpacing: "0.15em" }}>
+            <td className="font-mono" style={{ borderTop: "2px solid #262626", padding: "0 12px", fontSize: 9, color: "#404040", textAlign: "center", letterSpacing: "0.15em" }}>
               {rows.length}/{totalCount}
             </td>
           </tr>
@@ -508,12 +508,12 @@ function Row({
     window.setTimeout(() => setCopiedFlash(false), 700);
   };
 
-  const rowBg = selected ? "#0d1e35" : hover ? "#0d1e3580" : "transparent";
+  const rowBg = selected ? "#111111" : hover ? "#11111180" : "transparent";
 
   const cell: React.CSSProperties = {
     padding: "0 12px",
-    borderBottom: "1px solid #0d1e35",
-    borderRight: "1px solid #0d1e35",
+    borderBottom: "1px solid #111111",
+    borderRight: "1px solid #111111",
     fontSize: 11,
     fontFamily: '"IBM Plex Mono", monospace',
     verticalAlign: "middle",
@@ -524,27 +524,27 @@ function Row({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={onSelect}
-      style={{ height: 40, background: rowBg, transition: "background 100ms ease", cursor: "pointer", borderLeft: selected ? "2px solid #00d97e" : "2px solid transparent" }}
+      style={{ height: 40, background: rowBg, transition: "background 100ms ease", cursor: "pointer", borderLeft: selected ? "2px solid #fafafa" : "2px solid transparent" }}
     >
-      <td style={{ ...cell, color: "#2a4060", textAlign: "right" }}>{String(idx).padStart(2, "0")}</td>
+      <td style={{ ...cell, color: "#404040", textAlign: "right" }}>{String(idx).padStart(2, "0")}</td>
 
-      <td style={{ ...cell, color: "#e2eaf5", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.name}>
+      <td style={{ ...cell, color: "#fafafa", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.name}>
         {row.name}
       </td>
 
-      <td style={{ ...cell, color: "#4d9fff" }} title={row.vendorFull ?? row.vendor}>
+      <td style={{ ...cell, color: "#fafafa" }} title={row.vendorFull ?? row.vendor}>
         {row.vendor}
       </td>
 
       <td
-        style={{ ...cell, color: copiedFlash ? "#00d97e" : "#5a7a9a", transition: "color 150ms ease" }}
+        style={{ ...cell, color: copiedFlash ? "#fafafa" : "#a1a1a1", transition: "color 150ms ease" }}
         onClick={copyCatalog}
         title={copiedFlash ? "Copied" : "Click to copy"}
       >
         {row.catalog}
       </td>
 
-      <td style={{ ...cell, color: "#5a7a9a", textAlign: "right" }}>{fmtUSD2(row.unitPrice)}</td>
+      <td style={{ ...cell, color: "#a1a1a1", textAlign: "right" }}>{fmtUSD2(row.unitPrice)}</td>
 
       <td style={{ ...cell, textAlign: "center", padding: 0 }} onClick={(e) => { e.stopPropagation(); setEditingQty(true); }}>
         {editingQty ? (
@@ -556,12 +556,12 @@ function Row({
             onKeyDown={(e) => { if (e.key === "Enter") commitQty(); if (e.key === "Escape") { setDraftQty(String(row.qty)); setEditingQty(false); } }}
             className="font-mono outline-none text-center"
             style={{
-              width: "70%", height: 24, background: "#0d1e35", border: "1px solid #00d97e",
-              color: "#e2eaf5", fontSize: 11, padding: 0,
+              width: "70%", height: 24, background: "#111111", border: "1px solid #fafafa",
+              color: "#fafafa", fontSize: 11, padding: 0,
             }}
           />
         ) : (
-          <span style={{ color: "#e2eaf5" }}>{row.qty}</span>
+          <span style={{ color: "#fafafa" }}>{row.qty}</span>
         )}
       </td>
 

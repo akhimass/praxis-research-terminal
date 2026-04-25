@@ -196,7 +196,7 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
         onClick={onClose}
         className="fixed inset-0 z-40 transition-opacity duration-150"
         style={{
-          background: "#050a14a8",
+          background: "#000000a8",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
         }}
@@ -207,8 +207,8 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
         className="fixed top-0 right-0 z-50 h-full flex flex-col"
         style={{
           width: 480,
-          background: "#0a1628",
-          borderLeft: "1px solid #1a2f50",
+          background: "#0a0a0a",
+          borderLeft: "1px solid #262626",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 200ms ease",
           boxShadow: open ? "-12px 0 40px #00000080" : "none",
@@ -217,12 +217,12 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
         aria-label="Scientist review"
       >
         {/* Header */}
-        <div className="shrink-0 flex items-start justify-between" style={{ padding: "16px 20px", borderBottom: "1px solid #1a2f50" }}>
+        <div className="shrink-0 flex items-start justify-between" style={{ padding: "16px 20px", borderBottom: "1px solid #262626" }}>
           <div>
-            <div className="font-mono font-extrabold" style={{ fontSize: 11, color: "#e2eaf5", letterSpacing: "0.2em" }}>
+            <div className="font-mono font-extrabold" style={{ fontSize: 11, color: "#fafafa", letterSpacing: "0.2em" }}>
               SCIENTIST REVIEW
             </div>
-            <div className="font-mono mt-1" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
+            <div className="font-mono mt-1" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
               Your corrections improve future plans
             </div>
           </div>
@@ -231,7 +231,7 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
             onClick={onClose}
             aria-label="Close"
             className="font-mono"
-            style={{ width: 28, height: 28, background: "transparent", border: "1px solid #1a2f50", color: "#5a7a9a", cursor: "pointer", fontSize: 14 }}
+            style={{ width: 28, height: 28, background: "transparent", border: "1px solid #262626", color: "#a1a1a1", cursor: "pointer", fontSize: 14 }}
           >
             ×
           </button>
@@ -244,25 +244,25 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
 
           <div className="mt-5">
             <Label>SECTION-BY-SECTION REVIEW</Label>
-            <div className="mt-2 flex items-center gap-3 font-mono" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
-              <span><span style={{ color: "#00d97e" }}>{summary.correct}</span> CORRECT</span>
-              <span><span style={{ color: "#f0a500" }}>{summary.close}</span> CLOSE</span>
+            <div className="mt-2 flex items-center gap-3 font-mono" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
+              <span><span style={{ color: "#fafafa" }}>{summary.correct}</span> CORRECT</span>
+              <span><span style={{ color: "#a1a1a1" }}>{summary.close}</span> CLOSE</span>
               <span><span style={{ color: "#ff4d4d" }}>{summary.wrong}</span> WRONG</span>
-              <span className="ml-auto" style={{ color: "#2a4060" }}>{sections.length} ITEMS</span>
+              <span className="ml-auto" style={{ color: "#404040" }}>{sections.length} ITEMS</span>
             </div>
 
             {sections.length === 0 ? (
-              <div className="font-mono mt-4" style={{ fontSize: 10, color: "#2a4060" }}>
+              <div className="font-mono mt-4" style={{ fontSize: 10, color: "#404040" }}>
                 Run a hypothesis to populate reviewable sections.
               </div>
             ) : (
               <div className="mt-3 flex flex-col gap-4">
                 {grouped.map(([group, items]) => (
                   <div key={group}>
-                    <div className="font-mono uppercase mb-2" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.25em" }}>
+                    <div className="font-mono uppercase mb-2" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.25em" }}>
                       {group}
                     </div>
-                    <div className="flex flex-col" style={{ borderTop: "1px solid #1a2f50" }}>
+                    <div className="flex flex-col" style={{ borderTop: "1px solid #262626" }}>
                       {items.map((s) => (
                         <SectionRow
                           key={s.id}
@@ -282,7 +282,7 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
         </div>
 
         {/* Footer: submit + feedback loop */}
-        <div className="shrink-0" style={{ borderTop: "1px solid #1a2f50", padding: "14px 20px", background: "#08101f" }}>
+        <div className="shrink-0" style={{ borderTop: "1px solid #262626", padding: "14px 20px", background: "#050505" }}>
           <button
             type="button"
             onClick={submit}
@@ -290,9 +290,9 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
             className="w-full font-mono font-extrabold transition-all duration-150"
             style={{
               height: 40,
-              background: submitted ? "#00d97e22" : "#00d97e",
-              color: submitted ? "#00d97e" : "#000",
-              border: submitted ? "1px solid #00d97e" : "none",
+              background: submitted ? "#fafafa22" : "#fafafa",
+              color: submitted ? "#fafafa" : "#000",
+              border: submitted ? "1px solid #fafafa" : "none",
               fontSize: 11,
               letterSpacing: "0.2em",
               cursor: submitting || sections.length === 0 ? "not-allowed" : "pointer",
@@ -317,7 +317,7 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <div className="font-mono uppercase" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.25em" }}>
+    <div className="font-mono uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.25em" }}>
       {children}
     </div>
   );
@@ -349,7 +349,7 @@ function RatingHexes({ rating, onChange }: { rating: number; onChange: (n: numbe
             <Hex filled={active >= n} />
           </button>
         ))}
-        <span className="font-mono ml-2" style={{ fontSize: 10, color: "#5a7a9a", letterSpacing: "0.15em" }}>
+        <span className="font-mono ml-2" style={{ fontSize: 10, color: "#a1a1a1", letterSpacing: "0.15em" }}>
           {rating ? `${rating}/5` : "—"}
         </span>
       </div>
@@ -358,10 +358,10 @@ function RatingHexes({ rating, onChange }: { rating: number; onChange: (n: numbe
 }
 
 function Hex({ filled }: { filled: boolean }) {
-  const fill = filled ? "#00d97e" : "transparent";
-  const stroke = filled ? "#00d97e" : "#1a2f50";
+  const fill = filled ? "#fafafa" : "transparent";
+  const stroke = filled ? "#fafafa" : "#262626";
   return (
-    <svg width={24} height={26} viewBox="0 0 24 26" style={{ display: "block", filter: filled ? "drop-shadow(0 0 4px #00d97e88)" : "none" }}>
+    <svg width={24} height={26} viewBox="0 0 24 26" style={{ display: "block", filter: filled ? "drop-shadow(0 0 4px #fafafa88)" : "none" }}>
       <polygon points="12,1 22,7 22,19 12,25 2,19 2,7" fill={fill} stroke={stroke} strokeWidth={1.5} />
     </svg>
   );
@@ -384,9 +384,9 @@ function RoleSelector({ value, onChange }: { value: Role | null; onChange: (r: R
               style={{
                 height: 24,
                 padding: "0 10px",
-                background: active ? "#00d97e" : "transparent",
-                border: `1px solid ${active ? "#00d97e" : "#1a2f50"}`,
-                color: active ? "#000" : "#5a7a9a",
+                background: active ? "#fafafa" : "transparent",
+                border: `1px solid ${active ? "#fafafa" : "#262626"}`,
+                color: active ? "#000" : "#a1a1a1",
                 fontSize: 9,
                 letterSpacing: "0.15em",
                 cursor: "pointer",
@@ -413,22 +413,22 @@ function SectionRow({
   const verdict = review?.verdict ?? null;
   const expanded = verdict === "WRONG";
   return (
-    <div style={{ borderBottom: "1px solid #1a2f50", padding: "10px 0" }}>
+    <div style={{ borderBottom: "1px solid #262626", padding: "10px 0" }}>
       <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0 font-mono" style={{ fontSize: 11, color: "#e2eaf5", lineHeight: 1.5 }}>
+        <div className="flex-1 min-w-0 font-mono" style={{ fontSize: 11, color: "#fafafa", lineHeight: 1.5 }}>
           {section.label}
         </div>
         <div className="flex shrink-0 gap-1">
-          <VerdictBtn label="✓" full="CORRECT" color="#00d97e" active={verdict === "CORRECT"} onClick={() => onVerdict("CORRECT")} />
-          <VerdictBtn label="≈" full="CLOSE"   color="#f0a500" active={verdict === "CLOSE"}   onClick={() => onVerdict("CLOSE")} />
+          <VerdictBtn label="✓" full="CORRECT" color="#fafafa" active={verdict === "CORRECT"} onClick={() => onVerdict("CORRECT")} />
+          <VerdictBtn label="≈" full="CLOSE"   color="#a1a1a1" active={verdict === "CLOSE"}   onClick={() => onVerdict("CLOSE")} />
           <VerdictBtn label="✗" full="WRONG"   color="#ff4d4d" active={verdict === "WRONG"}   onClick={() => onVerdict("WRONG")} />
         </div>
       </div>
 
       {expanded && (
-        <div className="mt-3 animate-praxis-fade" style={{ background: "#050a14", border: "1px solid #1a2f5080", padding: 12 }}>
+        <div className="mt-3 animate-praxis-fade" style={{ background: "#000000", border: "1px solid #26262680", padding: 12 }}>
           <FieldLabel>ORIGINAL</FieldLabel>
-          <div className="font-mono mt-1" style={{ fontSize: 10, color: "#5a7a9a", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+          <div className="font-mono mt-1" style={{ fontSize: 10, color: "#a1a1a1", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
             {section.original || "—"}
           </div>
 
@@ -439,12 +439,12 @@ function SectionRow({
             rows={3}
             className="w-full font-mono mt-1"
             style={{
-              fontSize: 10, color: "#e2eaf5", background: "#08101f",
-              border: "1px solid #1a2f50", padding: 8, lineHeight: 1.6, resize: "vertical",
+              fontSize: 10, color: "#fafafa", background: "#050505",
+              border: "1px solid #262626", padding: 8, lineHeight: 1.6, resize: "vertical",
               outline: "none", borderRadius: 0,
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#00d97e")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1a2f50")}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#fafafa")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#262626")}
           />
 
           <FieldLabel className="mt-3">REASON</FieldLabel>
@@ -454,12 +454,12 @@ function SectionRow({
             placeholder="e.g. CLSI guideline M07-A11 specifies different range"
             className="w-full font-mono mt-1"
             style={{
-              fontSize: 10, color: "#e2eaf5", background: "#08101f",
-              border: "1px solid #1a2f50", padding: "6px 8px",
+              fontSize: 10, color: "#fafafa", background: "#050505",
+              border: "1px solid #262626", padding: "6px 8px",
               outline: "none", borderRadius: 0, height: 28,
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#00d97e")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#1a2f50")}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#fafafa")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#262626")}
           />
 
           <div className="mt-3 flex justify-end">
@@ -469,9 +469,9 @@ function SectionRow({
               className="font-mono font-bold transition-colors"
               style={{
                 height: 26, padding: "0 12px",
-                background: review?.saved ? "#00d97e22" : "transparent",
-                border: "1px solid #00d97e44",
-                color: "#00d97e",
+                background: review?.saved ? "#fafafa22" : "transparent",
+                border: "1px solid #fafafa44",
+                color: "#fafafa",
                 fontSize: 9, letterSpacing: "0.15em",
                 cursor: "pointer",
               }}
@@ -487,7 +487,7 @@ function SectionRow({
 
 function FieldLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`font-mono uppercase ${className ?? ""}`} style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.25em" }}>
+    <div className={`font-mono uppercase ${className ?? ""}`} style={{ fontSize: 8, color: "#404040", letterSpacing: "0.25em" }}>
       {children}
     </div>
   );
@@ -507,8 +507,8 @@ function VerdictBtn({ label, full, color, active, onClick }: { label: string; fu
       style={{
         width: 28, height: 24,
         background: active ? `${color}22` : "transparent",
-        border: `1px solid ${active ? color : "#1a2f50"}`,
-        color: active || hover ? color : "#5a7a9a",
+        border: `1px solid ${active ? color : "#262626"}`,
+        color: active || hover ? color : "#a1a1a1",
         fontSize: 12,
         letterSpacing: "0.05em",
         cursor: "pointer",
@@ -523,20 +523,20 @@ function FeedbackLoop({ count, corrections }: { count: number; corrections: Prio
   return (
     <div
       className="mt-3"
-      style={{ background: "#00d97e0d", border: "1px solid #00d97e33", padding: 10 }}
+      style={{ background: "#fafafa0d", border: "1px solid #fafafa33", padding: 10 }}
     >
-      <div className="font-mono uppercase" style={{ fontSize: 8, color: "#00d97e", letterSpacing: "0.25em" }}>
+      <div className="font-mono uppercase" style={{ fontSize: 8, color: "#fafafa", letterSpacing: "0.25em" }}>
         ◆ FEEDBACK APPLIED FROM {count} PRIOR {count === 1 ? "REVIEW" : "REVIEWS"}
       </div>
       <div className="mt-2 flex flex-col gap-1">
         {corrections.length === 0 ? (
-          <div className="font-mono" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.05em" }}>
+          <div className="font-mono" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.05em" }}>
             No prior corrections yet — your first review will start the loop.
           </div>
         ) : (
           corrections.map((c, i) => (
-            <div key={i} className="font-mono" style={{ fontSize: 9, color: "#00d97e", letterSpacing: "0.05em", lineHeight: 1.5 }}>
-              ↳ {c.group.toLowerCase()} corrected: {truncate(c.correction, 60)} <span style={{ color: "#5a7a9a" }}>(from {c.label})</span>
+            <div key={i} className="font-mono" style={{ fontSize: 9, color: "#fafafa", letterSpacing: "0.05em", lineHeight: 1.5 }}>
+              ↳ {c.group.toLowerCase()} corrected: {truncate(c.correction, 60)} <span style={{ color: "#a1a1a1" }}>(from {c.label})</span>
             </div>
           ))
         )}

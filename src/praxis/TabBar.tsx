@@ -2,12 +2,12 @@ import { cn } from "@/lib/utils";
 
 export type TabId = "SCIENCE" | "PROTOCOL" | "CODE" | "BUDGET" | "FUNDING" | "RISKS";
 export const TABS: { id: TabId; dot: string }[] = [
-  { id: "SCIENCE",  dot: "#9d6fff" },
-  { id: "PROTOCOL", dot: "#00d97e" },
-  { id: "CODE",     dot: "#4d9fff" },
-  { id: "BUDGET",   dot: "#f0a500" },
-  { id: "FUNDING",  dot: "#00d97e" },
-  { id: "RISKS",    dot: "#ff4d4d" },
+  { id: "SCIENCE",  dot: "#fafafa" },
+  { id: "PROTOCOL", dot: "#fafafa" },
+  { id: "CODE",     dot: "#fafafa" },
+  { id: "BUDGET",   dot: "#a1a1a1" },
+  { id: "FUNDING",  dot: "#fafafa" },
+  { id: "RISKS",    dot: "#ef4444" },
 ];
 
 interface Props {

@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
 
 const TILES = [
-  { icon: "⚗",   title: "Protocol Synthesis",    color: "#00d97e" },
-  { icon: "🧬",  title: "Literature Mining",     color: "#9d6fff" },
-  { icon: "</>", title: "Bioinformatics Code",   color: "#4d9fff" },
-  { icon: "💰",  title: "Funding Intelligence",  color: "#f0a500" },
+  { icon: "⚗",   title: "Protocol Synthesis",    color: "#fafafa" },
+  { icon: "🧬",  title: "Literature Mining",     color: "#fafafa" },
+  { icon: "</>", title: "Bioinformatics Code",   color: "#fafafa" },
+  { icon: "💰",  title: "Funding Intelligence",  color: "#a1a1a1" },
 ];
 
 export function EmptyState() {

@@ -165,7 +165,7 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
 
   // pLDDT presentation
   const pLDDT = confidence != null ? confidence * 100 : null;
-  const pLDDTColor = pLDDT == null ? "#2a4060" : pLDDT > 90 ? "#00d97e" : pLDDT >= 70 ? "#f0a500" : "#ff4d4d";
+  const pLDDTColor = pLDDT == null ? "#404040" : pLDDT > 90 ? "#fafafa" : pLDDT >= 70 ? "#a1a1a1" : "#ff4d4d";
 
   // Determine state
   const state: "idle" | "loading" | "error" | "loaded" =
@@ -174,25 +174,25 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
   return (
     <div
       className="flex flex-col h-full w-full"
-      style={{ background: "#050a14", borderLeft: "1px solid #1a2f50" }}
+      style={{ background: "#000000", borderLeft: "1px solid #262626" }}
     >
       {/* TOP HEADER BAR */}
       <div
         className="shrink-0 flex items-center"
-        style={{ height: 36, background: "#08101f", borderBottom: "1px solid #1a2f50", padding: "0 12px" }}
+        style={{ height: 36, background: "#050505", borderBottom: "1px solid #262626", padding: "0 12px" }}
       >
-        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.15em" }}>
+        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.15em" }}>
           STRUCTURAL ANALYSIS
         </div>
         <div className="flex-1 flex justify-center min-w-0 px-3">
           {proteinName && (
-            <span className="font-mono font-bold truncate" style={{ fontSize: 11, color: "#e2eaf5", letterSpacing: "0.05em" }}>
+            <span className="font-mono font-bold truncate" style={{ fontSize: 11, color: "#fafafa", letterSpacing: "0.05em" }}>
               {proteinName}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 font-mono shrink-0" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.15em" }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00d97e", opacity: 0.6, boxShadow: "0 0 6px #00d97e88" }} />
+        <div className="flex items-center gap-1.5 font-mono shrink-0" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.15em" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fafafa", opacity: 0.6, boxShadow: "0 0 6px #fafafa88" }} />
           {tamarind?.source ?? "TAMARIND BIO · ALPHAFOLD"}
         </div>
       </div>
@@ -257,29 +257,29 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
       {/* BOTTOM CONTROL BAR */}
       <div
         className="shrink-0 flex items-center gap-2"
-        style={{ height: 48, background: "#08101f", borderTop: "1px solid #1a2f50", padding: "0 12px" }}
+        style={{ height: 48, background: "#050505", borderTop: "1px solid #262626", padding: "0 12px" }}
       >
-        <CtrlButton label="SPIN ↻" active={spinning} activeColor="#00d97e" onClick={onSpinToggle} disabled={state !== "loaded"} />
+        <CtrlButton label="SPIN ↻" active={spinning} activeColor="#fafafa" onClick={onSpinToggle} disabled={state !== "loaded"} />
         <CtrlButton label="+ ZOOM" onClick={onZoomIn} disabled={state !== "loaded"} />
         <CtrlButton label="− ZOOM" onClick={onZoomOut} disabled={state !== "loaded"} />
         <CtrlButton label="RESET" onClick={onReset} disabled={state !== "loaded"} />
-        <CtrlButton label="SURFACE" active={showSurface} activeColor="#f0a500" onClick={onSurfaceToggle} disabled={state !== "loaded"} />
+        <CtrlButton label="SURFACE" active={showSurface} activeColor="#a1a1a1" onClick={onSurfaceToggle} disabled={state !== "loaded"} />
         <CtrlButton label="DOWNLOAD PDB" onClick={onDownloadPdb} disabled={state !== "loaded"} />
 
         <div className="flex-1" />
 
         {pLDDT != null && residues != null && (
-          <div className="flex items-center gap-3 font-mono shrink-0" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.1em" }}>
+          <div className="flex items-center gap-3 font-mono shrink-0" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.1em" }}>
             <span>
-              <span style={{ color: "#5a7a9a" }}>{residues}</span> RESIDUES
-              <span style={{ margin: "0 6px", color: "#1a2f50" }}>·</span>
+              <span style={{ color: "#a1a1a1" }}>{residues}</span> RESIDUES
+              <span style={{ margin: "0 6px", color: "#262626" }}>·</span>
               pLDDT <span style={{ color: pLDDTColor, fontWeight: 700 }}>{pLDDT.toFixed(1)}</span>
-              <span style={{ margin: "0 6px", color: "#1a2f50" }}>·</span>
+              <span style={{ margin: "0 6px", color: "#262626" }}>·</span>
               CONFIDENCE: <span style={{ color: pLDDTColor, fontWeight: 700 }}>
                 {pLDDT > 90 ? "HIGH" : pLDDT >= 70 ? "MEDIUM" : "LOW"}
               </span>
             </span>
-            <div style={{ width: 60, height: 3, background: "#1a2f50" }}>
+            <div style={{ width: 60, height: 3, background: "#262626" }}>
               <div style={{ width: `${Math.min(100, Math.max(0, pLDDT))}%`, height: 3, background: pLDDTColor, transition: "width 250ms ease" }} />
             </div>
           </div>
@@ -309,9 +309,9 @@ function CtrlButton({
   disabled?: boolean;
 }) {
   const [hover, setHover] = useState(false);
-  const ac = activeColor ?? "#00d97e";
-  const baseColor = active ? ac : hover && !disabled ? "#e2eaf5" : "#5a7a9a";
-  const border = active ? `${ac}44` : "#1a2f50";
+  const ac = activeColor ?? "#fafafa";
+  const baseColor = active ? ac : hover && !disabled ? "#fafafa" : "#a1a1a1";
+  const border = active ? `${ac}44` : "#262626";
   const bg = active ? `${ac}18` : "transparent";
   return (
     <button
@@ -326,7 +326,7 @@ function CtrlButton({
         padding: "0 10px",
         background: bg,
         border: `1px solid ${border}`,
-        color: disabled ? "#1a2f50" : baseColor,
+        color: disabled ? "#262626" : baseColor,
         fontSize: 9,
         letterSpacing: "0.15em",
         cursor: disabled ? "not-allowed" : "pointer",
@@ -342,12 +342,12 @@ function IdleState() {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
       <svg width={80} height={80} viewBox="0 0 80 80">
-        <polygon points="40,4 72,22 72,58 40,76 8,58 8,22" fill="none" stroke="#1a2f50" strokeWidth={1.5} />
+        <polygon points="40,4 72,22 72,58 40,76 8,58 8,22" fill="none" stroke="#262626" strokeWidth={1.5} />
       </svg>
-      <div className="font-mono mt-4" style={{ fontSize: 10, color: "#1a2f50", letterSpacing: "0.2em" }}>
+      <div className="font-mono mt-4" style={{ fontSize: 10, color: "#262626", letterSpacing: "0.2em" }}>
         STRUCTURAL PREDICTION
       </div>
-      <div className="font-mono mt-1.5" style={{ fontSize: 9, color: "#0d1e35", letterSpacing: "0.15em" }}>
+      <div className="font-mono mt-1.5" style={{ fontSize: 9, color: "#111111", letterSpacing: "0.15em" }}>
         SUBMIT HYPOTHESIS TO INITIATE
       </div>
     </div>
@@ -360,26 +360,26 @@ function LoadingState({ elapsed }: { elapsed: number }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
       <div className="relative" style={{ width: 160, height: 160 }}>
-        <Hex size={160} stroke="#00d97e22" duration="8s" />
-        <Hex size={120} stroke="#4d9fff22" duration="5s" reverse />
-        <Hex size={80}  stroke="#9d6fff22" duration="3s" />
+        <Hex size={160} stroke="#fafafa22" duration="8s" />
+        <Hex size={120} stroke="#fafafa22" duration="5s" reverse />
+        <Hex size={80}  stroke="#fafafa22" duration="3s" />
         <div className="absolute inset-0 flex items-center justify-center">
           <span
             className="font-mono"
-            style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.2em", animation: "praxis-pulse 1.5s ease-in-out infinite" }}
+            style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em", animation: "praxis-pulse 1.5s ease-in-out infinite" }}
           >
             ALPHAFOLD RUNNING
           </span>
         </div>
       </div>
-      <div className="font-mono mt-6 flex flex-col gap-1.5 items-start" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
+      <div className="font-mono mt-6 flex flex-col gap-1.5 items-start" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
         <Step text="Sequence validated" delayMs={0} elapsed={elapsed} />
         <Step text="Structure prediction initiated" delayMs={2000} elapsed={elapsed * 1000} />
         <Step text="Folding" delayMs={4000} elapsed={elapsed * 1000} animated />
       </div>
       <div
         className="absolute font-mono"
-        style={{ right: 14, bottom: 12, fontSize: 9, color: "#2a4060", letterSpacing: "0.15em", fontVariantNumeric: "tabular-nums" }}
+        style={{ right: 14, bottom: 12, fontSize: 9, color: "#404040", letterSpacing: "0.15em", fontVariantNumeric: "tabular-nums" }}
       >
         {mm}:{ss}
       </div>
@@ -391,7 +391,7 @@ function Step({ text, delayMs, elapsed, animated }: { text: string; delayMs: num
   const visible = elapsed * 1000 >= delayMs || delayMs === 0;
   return (
     <div style={{ opacity: visible ? 1 : 0.25, transition: "opacity 200ms ease" }}>
-      <span style={{ color: "#00d97e", marginRight: 6 }}>▸</span>
+      <span style={{ color: "#fafafa", marginRight: 6 }}>▸</span>
       {text}{animated && <span className="animate-praxis-dots">...</span>}
     </div>
   );
@@ -423,10 +423,10 @@ function Hex({ size, stroke, duration, reverse }: { size: number; stroke: string
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <div className="font-mono" style={{ fontSize: 11, color: "#f0a500", letterSpacing: "0.2em" }}>
+      <div className="font-mono" style={{ fontSize: 11, color: "#a1a1a1", letterSpacing: "0.2em" }}>
         ⚠ STRUCTURE UNAVAILABLE
       </div>
-      <div className="font-mono mt-2" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
+      <div className="font-mono mt-2" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
         {message}
       </div>
       <a
@@ -434,7 +434,7 @@ function ErrorState({ message }: { message: string }) {
         target="_blank"
         rel="noreferrer"
         className="font-mono mt-4"
-        style={{ fontSize: 10, color: "#4d9fff", letterSpacing: "0.15em", textDecoration: "none", borderBottom: "1px solid #4d9fff44", paddingBottom: 1 }}
+        style={{ fontSize: 10, color: "#fafafa", letterSpacing: "0.15em", textDecoration: "none", borderBottom: "1px solid #fafafa44", paddingBottom: 1 }}
       >
         SEARCH MANUALLY ↗
       </a>
