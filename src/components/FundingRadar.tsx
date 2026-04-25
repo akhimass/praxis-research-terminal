@@ -51,6 +51,7 @@ export default function FundingRadar({
   max_display = 4
 }: FundingRadarProps) {
   const [hoveredGrant, setHoveredGrant] = useState<string | null>(null)
+  const [hoveredDimension, setHoveredDimension] = useState<string | null>(null)
   const [visibleGrants, setVisibleGrants] = useState<Set<string>>(
     new Set(opportunities.slice(0, max_display).map(o => o.id))
   )
@@ -131,6 +132,7 @@ export default function FundingRadar({
           {/* Axis lines */}
           {DIMENSIONS.map(dim => {
             const end = polarToCartesian(dim.angle, maxRadius, cx, cy)
+            const isHighlighted = hoveredDimension === dim.key
             return (
               <line
                 key={dim.key}
@@ -138,8 +140,9 @@ export default function FundingRadar({
                 y1={cy}
                 x2={end.x}
                 y2={end.y}
-                stroke="#1a2f50"
-                strokeWidth="1"
+                stroke={isHighlighted ? "#4d9fff" : "#1a2f50"}
+                strokeWidth={isHighlighted ? 2 : 1}
+                style={{ transition: "stroke 0.2s, stroke-width 0.2s" }}
               />
             )
           })}
@@ -188,21 +191,22 @@ export default function FundingRadar({
                   const score = opp.scores[dim.key as keyof typeof opp.scores]
                   const r = (score / 100) * maxRadius
                   const point = polarToCartesian(dim.angle, r, cx, cy)
+                  const isDimHighlighted = hoveredDimension === dim.key
                   
                   return (
                     <g key={dim.key}>
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r={isHovered ? 8 : 5}
+                        r={isHovered || isDimHighlighted ? 10 : 6}
                         fill={opp.color}
                         style={{ transition: "r 0.2s" }}
                       />
-                      {isHovered && (
+                      {(isHovered || isDimHighlighted) && (
                         <text
                           x={point.x}
-                          y={point.y - 12}
-                          fontSize="8"
+                          y={point.y - 14}
+                          fontSize="9"
                           fill="#e2eaf5"
                           textAnchor="middle"
                           fontWeight="700"
@@ -340,11 +344,13 @@ export default function FundingRadar({
                 return (
                   <div
                     key={opp.id}
-                    className="flex-1 p-2 text-center text-[10px] font-bold"
+                    className="flex-1 p-2 text-center text-[10px] font-bold cursor-pointer"
                     style={{
                       color: getScoreColor(score),
                       background: opp.id === bestGrant.id ? "#00d97e08" : "transparent"
                     }}
+                    onMouseEnter={() => setHoveredDimension(dim.key)}
+                    onMouseLeave={() => setHoveredDimension(null)}
                   >
                     {score}
                   </div>
