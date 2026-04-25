@@ -1,28 +1,111 @@
 import { useState } from "react";
 import { Paper, TamarindData } from "../lib/types";
 import { ProteinViewer } from "../ProteinViewer";
+import { AgentError } from "@/components/AgentError";
 
-interface Props { papers: Paper[]; tamarind: TamarindData | null; isStructureLoading?: boolean; }
+export type LiteratureStatus = "ok" | "no_results" | "api_error";
+export type NoveltySignal = "NOT FOUND" | "SIMILAR EXISTS" | "EXACT MATCH";
 
-export function ScienceTab({ papers, tamarind, isStructureLoading = false }: Props) {
+interface Props {
+  papers: Paper[];
+  tamarind: TamarindData | null;
+  isStructureLoading?: boolean;
+  literatureStatus?: LiteratureStatus;
+  novelty?: NoveltySignal;
+  hypothesisTerms?: string;
+  onRetry?: () => void;
+}
+
+export function ScienceTab({
+  papers, tamarind, isStructureLoading = false,
+  literatureStatus = "ok",
+  novelty,
+  hypothesisTerms,
+  onRetry,
+}: Props) {
   return (
     <div className="grid w-full h-full animate-praxis-fade" style={{ gridTemplateColumns: "55fr 45fr", gap: 16 }}>
-      <LiteratureColumn papers={papers} />
+      <LiteratureColumn
+        papers={papers}
+        status={literatureStatus}
+        novelty={novelty}
+        hypothesisTerms={hypothesisTerms}
+        onRetry={onRetry}
+      />
       <div className="min-h-0">
-        <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} />
+        <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} onRetry={onRetry} />
       </div>
     </div>
   );
 }
 
-function LiteratureColumn({ papers }: { papers: Paper[] }) {
+function NoveltyBanner({ signal }: { signal: NoveltySignal }) {
+  const icon = signal === "EXACT MATCH" ? "●" : signal === "SIMILAR EXISTS" ? "◐" : "●";
+  const tone =
+    signal === "NOT FOUND" ? "border-foreground/60 text-foreground"   // good news
+    : signal === "EXACT MATCH" ? "border-destructive/60 text-destructive"
+    : "border-ax-amber/60 text-ax-amber";
+  return (
+    <div className={`mb-3 inline-flex items-center gap-2 px-3 py-1.5 border ${tone} font-mono text-[10px] font-bold tracking-[0.18em] uppercase`}>
+      <span>NOVELTY:</span>
+      <span>[ {icon} {signal} ]</span>
+    </div>
+  );
+}
+
+function LiteratureColumn({
+  papers, status, novelty, hypothesisTerms, onRetry,
+}: {
+  papers: Paper[];
+  status: LiteratureStatus;
+  novelty?: NoveltySignal;
+  hypothesisTerms?: string;
+  onRetry?: () => void;
+}) {
+  const pubmedHref = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(hypothesisTerms ?? "")}`;
+  const cached = status === "api_error" && papers.length > 0;
   return (
     <div className="flex flex-col min-h-0">
-      <div className="font-mono mb-3 uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em" }}>
-        LITERATURE · {papers.length} PAPERS
+      <div className="flex items-center gap-2 mb-3">
+        <span className="font-mono uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em" }}>
+          LITERATURE · {papers.length} PAPERS
+        </span>
+        {cached && (
+          <span className="font-mono text-[9px] tracking-[0.18em] uppercase px-2 py-0.5 border border-ax-amber/40 text-ax-amber/80">
+            CACHED DATA
+          </span>
+        )}
       </div>
+
+      {novelty && <NoveltyBanner signal={novelty} />}
+
+      {status === "no_results" && papers.length === 0 && (
+        <AgentError
+          agent="LITERATURE"
+          title="No literature found"
+          message="Tavily search returned no results for this hypothesis."
+          suggestion="Try simplifying the hypothesis or searching manually."
+          canRetry={!!onRetry}
+          onRetry={onRetry}
+          actions={[{ label: "SEARCH PUBMED ↗", href: pubmedHref, variant: "primary" }]}
+          className="mb-3"
+        />
+      )}
+
+      {status === "api_error" && (
+        <AgentError
+          agent="LITERATURE"
+          title="Literature search unavailable"
+          message="Tavily API unreachable. Using cached results."
+          suggestion="Results may be less current. Full search will resume automatically."
+          canRetry={!!onRetry}
+          onRetry={onRetry}
+          className="mb-3"
+        />
+      )}
+
       <div className="flex flex-col gap-2 overflow-y-auto praxis-scroll pr-1">
-        {papers.length === 0 && <EmptyHint>No literature retrieved yet.</EmptyHint>}
+        {papers.length === 0 && status === "ok" && <EmptyHint>No literature retrieved yet.</EmptyHint>}
         {papers.map((p, i) => <PaperCard key={i} paper={p} />)}
       </div>
     </div>
