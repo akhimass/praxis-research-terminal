@@ -162,6 +162,12 @@
   @keyframes praxis-spin-hex { to { transform: rotate(360deg); } }
   .animate-hex-spin { animation: praxis-spin-hex 3s linear infinite; transform-origin: center; }
 
+  @keyframes praxis-spin { to { transform: rotate(360deg); } }
+  @keyframes praxis-pulse {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 1; }
+  }
+
   @keyframes praxis-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
