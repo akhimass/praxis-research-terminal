@@ -14,7 +14,6 @@ import { CodeTab } from "./tabs/CodeTab";
 import { BudgetTab } from "./tabs/BudgetTab";
 import { FundingTab } from "./tabs/FundingTab";
 import { ReviewDrawer } from "./ReviewDrawer";
-import { VerifyPreviewButton } from "./VerifyPreviewButton";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 
 export function Praxis() {
@@ -90,7 +89,6 @@ export function Praxis() {
         budget={state.budget}
         tamarind={state.tamarind}
       />
-      <VerifyPreviewButton />
     </div>
   );
 }
