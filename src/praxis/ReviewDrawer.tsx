@@ -12,7 +12,7 @@ interface SectionItem {
 }
 
 interface SectionReview {
-  verdict: Verdict;
+  verdict?: Verdict;
   correction?: string;
   reason?: string;
   saved?: boolean;
