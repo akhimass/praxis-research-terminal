@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Header } from "./Header";
 import { HypothesisInput } from "./HypothesisInput";
 import { AgentPanel } from "./AgentPanel";
@@ -6,7 +6,7 @@ import { TraceLog } from "./TraceLog";
 import { TabBar, TabId, TabDotStatus } from "./TabBar";
 import { KeyFindingBanner } from "./KeyFindingBanner";
 import { EmptyState } from "./EmptyState";
-import { ScienceTab, LiteratureStatus } from "./tabs/ScienceTab";
+import { ScienceTab, LiteratureStatus, NoveltySignal } from "./tabs/ScienceTab";
 import { ProtocolTab } from "./tabs/ProtocolTab";
 import { PlaceholderTab } from "./tabs/PlaceholderTab";
 import { RisksTab } from "./tabs/RisksTab";
@@ -14,69 +14,27 @@ import { CodeTab } from "./tabs/CodeTab";
 import { BudgetTab } from "./tabs/BudgetTab";
 import { FundingTab } from "./tabs/FundingTab";
 import { ReviewDrawer } from "./ReviewDrawer";
-import { usePraxisStream, DEMO_HYPOTHESIS } from "@/hooks/usePraxisStream";
+import { BackendOfflineOverlay } from "./BackendOfflineOverlay";
+import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 import { PrintableReport, type ResearchProgram } from "@/components/PrintableReport";
 import { SkeletonWrapper } from "@/components/SkeletonWrapper";
 import {
-  ScienceSkeleton,
-  ProtocolSkeleton,
-  CodeSkeleton,
-  BudgetSkeleton,
-  FundingSkeleton,
-  RisksSkeleton,
+  ScienceSkeleton, ProtocolSkeleton, CodeSkeleton,
+  BudgetSkeleton, FundingSkeleton, RisksSkeleton,
 } from "./skeletons/TabSkeletons";
-import {
-  keyFindingText,
-  mapNoveltyToTabSignal,
-  mapStreamAgents,
-  mapStreamAudit,
-  mapStreamBudget,
-  mapStreamFunding,
-  mapStreamPapers,
-  mapStreamProtocol,
-  mapStreamScripts,
-  mapStreamTrace,
-  mapTamarindForViewer,
-  streamHeaderStatus,
-} from "./streamMappers";
 
 export function Praxis() {
-  const { state: stream, run: runStream, runDemo, cancel, reset, clearKeyFinding } = usePraxisStream();
-  const [hypothesis, setHypothesis] = useState("");
-  const lastHypothesisRef = useRef("");
+  const { state, run, dismissKeyFinding, retry } = usePraxisPipeline();
   const [tab, setTab] = useState<TabId>("SCIENCE");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
 
-  const uiAgents = useMemo(() => mapStreamAgents(stream.agentStates as Record<string, { state: string; duration?: number; finding?: string }>), [stream.agentStates]);
-  const papers = useMemo(() => mapStreamPapers(stream.papers), [stream.papers]);
-  const protocol = useMemo(() => mapStreamProtocol(stream.protocolSteps), [stream.protocolSteps]);
-  const scripts = useMemo(() => mapStreamScripts(stream.scripts), [stream.scripts]);
-  const budget = useMemo(
-    () => mapStreamBudget(stream.reagents, stream.budgetTotal, stream.estimatedWeeks),
-    [stream.reagents, stream.budgetTotal, stream.estimatedWeeks],
-  );
-  const funding = useMemo(() => mapStreamFunding(stream.funding), [stream.funding]);
-  const audit = useMemo(() => mapStreamAudit(stream.auditFlags), [stream.auditFlags]);
-  const tamarind = useMemo(() => mapTamarindForViewer(stream.tamarind), [stream.tamarind]);
-  const trace = useMemo(() => mapStreamTrace(stream.trace), [stream.trace]);
-  const noveltyTab = useMemo(() => mapNoveltyToTabSignal(stream.novelty), [stream.novelty]);
-  const keyFindingStr = useMemo(() => keyFindingText(stream.keyFinding), [stream.keyFinding]);
+  const anyData = Object.values(state.hasData).some(Boolean);
 
-  const headerStatus = streamHeaderStatus(stream.phase, stream.agentStates as Record<string, { state: string }>);
-
-  const isRunning = stream.isRunning;
-  const anyData =
-    papers.length > 0 ||
-    protocol.length > 0 ||
-    scripts.length > 0 ||
-    budget.reagents.length > 0 ||
-    funding.grants.length > 0 ||
-    audit.length > 0 ||
-    tamarind != null;
-
+  // Per-tab status dots derived from agent state + data presence.
   const tabStatus = useMemo<Partial<Record<TabId, TabDotStatus>>>(() => {
-    const ag = uiAgents;
+    const ag = state.agents;
     const s = (a: keyof typeof ag, hasData: boolean): TabDotStatus => {
       const st = ag[a]?.state;
       if (st === "running") return "running";
@@ -86,57 +44,67 @@ export function Praxis() {
       return "none";
     };
     return {
-      SCIENCE: s("literature", papers.length > 0 || tamarind != null),
-      PROTOCOL: s("protocol", protocol.length > 0),
-      CODE: s("bioinformatics", scripts.length > 0),
-      BUDGET: s("reagents", budget.reagents.length > 0),
-      FUNDING: s("funding", funding.grants.length > 0),
-      RISKS: s("audit", audit.length > 0),
+      SCIENCE:  s("literature", state.papers.length > 0),
+      PROTOCOL: s("protocol", state.protocol.length > 0),
+      CODE:     s("bioinformatics", state.bioinformatics.length > 0),
+      BUDGET:   s("reagents", state.budget.reagents.length > 0),
+      FUNDING:  s("funding", state.funding.grants.length > 0),
+      RISKS:    state.audit.length > 0
+        ? (state.audit.some((a) => a.severity === "HIGH") ? "error" : "warn")
+        : "none",
     };
-  }, [uiAgents, papers.length, protocol.length, scripts.length, budget.reagents.length, funding.grants.length, audit.length, tamarind]);
+  }, [state]);
 
+  // Determine partial-failure status.
   const failedAgents = useMemo(
-    () => Object.entries(uiAgents).filter(([, a]) => a.state === "error").map(([id]) => id),
-    [uiAgents],
+    () => Object.entries(state.agents).filter(([, a]) => a.state === "error").map(([id]) => id),
+    [state.agents]
   );
   const hasFailures = failedAgents.length > 0;
-  const headerDisplay =
-    headerStatus === "COMPLETE" && hasFailures ? ("PARTIAL" as const) : headerStatus;
+  const headerStatus =
+    state.status === "COMPLETE" && hasFailures ? "PARTIAL" : state.status;
 
+  // Errored flags for each tab — true when agent errored OR completed but produced no usable data.
   const literatureStatus: LiteratureStatus =
-    uiAgents.literature?.state === "error"
+    state.agents.literature?.state === "error"
       ? "api_error"
-      : uiAgents.literature?.state === "complete" && papers.length === 0
+      : state.agents.literature?.state === "complete" && state.papers.length === 0
         ? "no_results"
         : "ok";
 
+  const novelty: NoveltySignal | undefined =
+    state.agents.literature?.state === "complete" && state.papers.length === 0
+      ? "NOT FOUND"
+      : undefined;
+
   const codeErrored =
-    uiAgents.bioinformatics?.state === "error" ||
-    (uiAgents.bioinformatics?.state === "complete" && scripts.length === 0);
+    state.agents.bioinformatics?.state === "error" ||
+    (state.agents.bioinformatics?.state === "complete" && state.bioinformatics.length === 0);
 
   const fundingErrored =
-    uiAgents.funding?.state === "error" ||
-    (uiAgents.funding?.state === "complete" && funding.grants.length === 0);
+    state.agents.funding?.state === "error" ||
+    (state.agents.funding?.state === "complete" && state.funding.grants.length === 0);
 
+  // A tab is "loading" when its agent is running AND no data has arrived yet.
   const loading = {
-    SCIENCE: uiAgents.literature?.state === "running" && papers.length === 0,
-    PROTOCOL: uiAgents.protocol?.state === "running" && protocol.length === 0,
-    CODE: uiAgents.bioinformatics?.state === "running" && scripts.length === 0,
-    BUDGET: uiAgents.reagents?.state === "running" && budget.reagents.length === 0,
-    FUNDING: uiAgents.funding?.state === "running" && funding.grants.length === 0,
-    RISKS: uiAgents.audit?.state === "running" && audit.length === 0,
+    SCIENCE: state.agents.literature?.state === "running" && state.papers.length === 0,
+    PROTOCOL: state.agents.protocol?.state === "running" && state.protocol.length === 0,
+    CODE: state.agents.bioinformatics?.state === "running" && state.bioinformatics.length === 0,
+    BUDGET: state.agents.reagents?.state === "running" && state.budget.reagents.length === 0,
+    FUNDING: state.agents.funding?.state === "running" && state.funding.grants.length === 0,
+    RISKS: state.status === "RUNNING" && state.audit.length === 0,
   };
 
   const program: ResearchProgram = {
-    hypothesis: lastHypothesisRef.current || hypothesis,
-    papers,
-    protocol,
-    budget,
-    funding,
-    audit,
-    keyFinding: keyFindingStr,
-    estimatedWeeks: budget.estimatedWeeks,
-    noveltySignal: noveltyTab ?? "NOT FOUND",
+    hypothesis: state.lastHypothesis ?? "",
+    papers: state.papers,
+    protocol: state.protocol,
+    budget: state.budget,
+    funding: state.funding,
+    audit: state.audit,
+    keyFinding: state.keyFinding,
+    estimatedWeeks: state.budget?.estimatedWeeks,
+    noveltySignal: novelty ?? "NOT FOUND",
   };
 
   const handleExport = () => {
@@ -147,41 +115,24 @@ export function Praxis() {
     }, 300);
   };
 
-  const run = (h: string) => {
-    lastHypothesisRef.current = h;
-    void runStream(h);
+  const handleRunDemo = () => {
+    setOverlayDismissed(true);
+    run("Demo: gyrA mutations confer fluoroquinolone resistance in E. coli");
   };
 
-  const handleDemo = () => {
-    setHypothesis(DEMO_HYPOTHESIS);
-    lastHypothesisRef.current = DEMO_HYPOTHESIS;
-    void runDemo();
+  const handleRetryConnection = () => {
+    setOverlayDismissed(true);
+    if (state.lastHypothesis) run(state.lastHypothesis);
   };
 
-  const handleReset = () => {
-    reset();
-    setHypothesis("");
-    lastHypothesisRef.current = "";
-  };
-
-  const retry = () => {
-    const h = lastHypothesisRef.current || hypothesis.trim();
-    if (h) void runStream(h);
-  };
-
-  const hasDataFlags = {
-    science: papers.length > 0 || tamarind != null,
-    protocol: protocol.length > 0,
-    code: scripts.length > 0,
-    budget: budget.reagents.length > 0,
-    funding: funding.grants.length > 0,
-    risks: audit.length > 0,
-  };
+  // Show overlay only on initial load before any run.
+  const showOverlay =
+    state.backendOffline && !overlayDismissed && state.status === "READY" && !anyData;
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground font-sans overflow-hidden">
       <Header
-        status={headerDisplay}
+        status={headerStatus}
         onReviewClick={() => setReviewOpen(true)}
         onExportClick={handleExport}
         exportDisabled={!anyData}
@@ -191,68 +142,55 @@ export function Praxis() {
       />
 
       <div className="flex flex-1 min-h-0">
+        {/* ZONE B */}
         <aside className="flex flex-col shrink-0 w-[320px] bg-surface-deep border-r border-border">
-          <HypothesisInput
-            disabled={isRunning}
-            onRun={run}
-            value={hypothesis}
-            onChange={setHypothesis}
-            isRunning={isRunning}
-            onDemo={handleDemo}
-            onCancel={cancel}
-            onReset={handleReset}
-          />
-          <AgentPanel agents={uiAgents} />
-          <TraceLog entries={trace} />
+          <HypothesisInput disabled={state.status === "RUNNING"} onRun={run} />
+          <AgentPanel agents={state.agents} />
+          <TraceLog entries={state.trace} />
         </aside>
 
+        {/* ZONE C */}
         <main className="flex-1 flex flex-col min-w-0 bg-background">
-          <TabBar active={tab} onChange={setTab} hasData={hasDataFlags} status={tabStatus} />
-          {stream.novelty && (
-            <div className="px-5 py-2 border-b border-ax-amber/30 bg-ax-amber/5 font-mono text-[10px] text-foreground/90 shrink-0">
-              <span className="font-bold tracking-[0.15em] text-ax-amber">NOVELTY</span>
-              <span className="mx-2 opacity-60">·</span>
-              <span className="uppercase">{stream.novelty.signal.replace(/_/g, " ")}</span>
-              <span className="mx-2 opacity-60">—</span>
-              {stream.novelty.summary}
-            </div>
-          )}
-          {keyFindingStr && (
-            <KeyFindingBanner text={keyFindingStr} onDismiss={clearKeyFinding} />
+          <TabBar
+            active={tab}
+            onChange={setTab}
+            hasData={state.hasData as any}
+            status={tabStatus}
+          />
+          {state.keyFinding && (
+            <KeyFindingBanner text={state.keyFinding} onDismiss={dismissKeyFinding} />
           )}
           <section
             className={`flex-1 min-h-0 ${tab === "CODE" || tab === "BUDGET" || tab === "FUNDING" ? "overflow-hidden" : "overflow-y-auto praxis-scroll"}`}
             style={tab === "CODE" || tab === "BUDGET" || tab === "FUNDING" ? { padding: 0 } : { padding: 20 }}
           >
-            {!anyData && !isRunning ? (
+            {!anyData && state.status !== "RUNNING" ? (
               <EmptyState />
             ) : tab === "SCIENCE" ? (
               <SkeletonWrapper isLoading={loading.SCIENCE} skeleton={<ScienceSkeleton />}>
                 <ScienceTab
-                  papers={papers}
-                  tamarind={tamarind}
-                  isStructureLoading={uiAgents.tamarind?.state === "running"}
-                  isLoadingLiterature={uiAgents.literature?.state === "running"}
-                  isLoadingTamarind={uiAgents.tamarind?.state === "running"}
+                  papers={state.papers}
+                  tamarind={state.tamarind}
+                  isStructureLoading={state.agents.bioinformatics?.state === "running"}
                   literatureStatus={literatureStatus}
-                  novelty={noveltyTab}
-                  hypothesisTerms={lastHypothesisRef.current || hypothesis}
+                  novelty={novelty}
+                  hypothesisTerms={state.lastHypothesis ?? ""}
                   onRetry={retry}
                 />
               </SkeletonWrapper>
             ) : tab === "PROTOCOL" ? (
               <SkeletonWrapper isLoading={loading.PROTOCOL} skeleton={<ProtocolSkeleton />}>
-                <ProtocolTab steps={protocol} isLoading={uiAgents.protocol?.state === "running"} />
+                <ProtocolTab steps={state.protocol} />
               </SkeletonWrapper>
             ) : tab === "RISKS" ? (
               <SkeletonWrapper isLoading={loading.RISKS} skeleton={<RisksSkeleton />}>
-                <RisksTab flags={audit} isLoading={uiAgents.audit?.state === "running"} />
+                <RisksTab flags={state.audit} />
               </SkeletonWrapper>
             ) : tab === "CODE" ? (
               <SkeletonWrapper isLoading={loading.CODE} skeleton={<CodeSkeleton />}>
                 <CodeTab
-                  scripts={scripts}
-                  loading={uiAgents.bioinformatics?.state === "running"}
+                  scripts={state.bioinformatics}
+                  loading={state.agents.bioinformatics?.state === "running"}
                   errored={codeErrored}
                   onRetry={retry}
                 />
@@ -260,16 +198,16 @@ export function Praxis() {
             ) : tab === "BUDGET" ? (
               <SkeletonWrapper isLoading={loading.BUDGET} skeleton={<BudgetSkeleton />}>
                 <BudgetTab
-                  data={budget}
-                  loading={uiAgents.reagents?.state === "running" || uiAgents.timeline?.state === "running"}
+                  data={state.budget}
+                  loading={state.agents.reagents?.state === "running"}
                   onRetry={retry}
                 />
               </SkeletonWrapper>
             ) : tab === "FUNDING" ? (
               <SkeletonWrapper isLoading={loading.FUNDING} skeleton={<FundingSkeleton />}>
                 <FundingTab
-                  data={funding}
-                  loading={uiAgents.funding?.state === "running"}
+                  data={state.funding}
+                  loading={state.agents.funding?.state === "running"}
                   errored={fundingErrored}
                   onRetry={retry}
                 />
@@ -283,9 +221,14 @@ export function Praxis() {
       <ReviewDrawer
         open={reviewOpen}
         onClose={() => setReviewOpen(false)}
-        protocol={protocol}
-        budget={budget}
-        tamarind={tamarind}
+        protocol={state.protocol}
+        budget={state.budget}
+        tamarind={state.tamarind}
+      />
+      <BackendOfflineOverlay
+        open={showOverlay}
+        onRunDemo={handleRunDemo}
+        onRetry={handleRetryConnection}
       />
       <PrintableReport program={program} />
     </div>

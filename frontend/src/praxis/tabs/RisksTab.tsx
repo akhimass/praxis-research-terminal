@@ -1,14 +1,7 @@
 import { useState } from "react";
 import { AuditFlag } from "../lib/types";
 
-export function RisksTab({ flags, isLoading = false }: { flags: AuditFlag[]; isLoading?: boolean }) {
-  if (isLoading && !flags.length) {
-    return (
-      <div className="animate-praxis-fade flex items-center justify-center font-mono text-[11px] text-ax-amber tracking-[0.15em] border border-ax-amber/30 p-8">
-        AUDIT AGENT RUNNING…
-      </div>
-    );
-  }
+export function RisksTab({ flags }: { flags: AuditFlag[] }) {
   if (!flags.length) {
     return (
       <div className="animate-praxis-fade flex items-center justify-center" style={{ minHeight: 240 }}>

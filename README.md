@@ -43,4 +43,4 @@ npm run dev
 
 ## Frontend source
 
-The UI was cloned from [praxis-research-terminal](https://github.com/akhimass/praxis-research-terminal) into `frontend/` (nested `.git` removed for a single monorepo checkout).
+The UI is developed in [praxis-research-terminal](https://github.com/akhimass/praxis-research-terminal); Lovable `v0/*` branches are merged into `main` here under `frontend/`.

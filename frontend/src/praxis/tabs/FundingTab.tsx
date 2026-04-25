@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { getApiBase } from "@/lib/apiBase";
 import { FundingData, FundingGrant, GrantType } from "../lib/types";
 import { AgentError } from "@/components/AgentError";
 import { FundingRadar } from "@/components/visualizations/FundingRadar";
@@ -233,9 +232,7 @@ function DeepDive({ grant }: { grant: FundingGrant }) {
   const generate = async () => {
     setGenerating(true);
     try {
-      const base = getApiBase();
-      if (!base) throw new Error("VITE_API_URL is not set");
-      const res = await fetch(`${base}/funding/generate-aims`, {
+      const res = await fetch("http://localhost:8000/funding/generate-aims", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ grant_id: grant.id, program: grant.name }),

@@ -1,4 +1,3 @@
-import { getApiBase } from "@/lib/apiBase";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -21,7 +20,7 @@ export function BackendOfflineOverlay({ open, onRunDemo, onRetry }: Props) {
         BACKEND OFFLINE
       </div>
       <div className="mt-3 font-mono text-[11px] text-text-muted tracking-[0.1em]">
-        Cannot reach {getApiBase() || "API (configure VITE_API_URL)"}
+        Cannot reach localhost:8000
       </div>
       <div className="mt-2 font-mono text-[11px] text-foreground/80 max-w-md text-center px-6">
         → Running in demo mode — all features available with sample data

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { ExportPdfButton } from "./ExportPdfButton";
 
 interface Props {
-  status: GlobalStatus | "PARTIAL" | "ERROR";
+  status: GlobalStatus | "PARTIAL";
   onReviewClick?: () => void;
   onExportClick?: () => void;
   exportDisabled?: boolean;
@@ -65,16 +65,9 @@ export function Header({
   );
 }
 
-function StatusPill({ status }: { status: GlobalStatus | "PARTIAL" | "ERROR" }) {
+function StatusPill({ status }: { status: GlobalStatus | "PARTIAL" }) {
   const base =
     "rounded-none px-3 py-1 text-[10px] font-semibold tracking-[0.2em] uppercase border bg-transparent";
-  if (status === "ERROR") {
-    return (
-      <Badge variant="outline" className={cn(base, "text-destructive border-destructive/60 bg-destructive/10")}>
-        ✗ Error
-      </Badge>
-    );
-  }
   if (status === "RUNNING") {
     return (
       <Badge variant="outline" className={cn(base, "text-ax-amber border-ax-amber/40 animate-status-pulse")}>

@@ -2,15 +2,8 @@ import { useState } from "react";
 import { ProtocolStep } from "../lib/types";
 import { ProtocolFlow } from "@/components/visualizations/ProtocolFlow";
 
-export function ProtocolTab({ steps, isLoading = false }: { steps: ProtocolStep[]; isLoading?: boolean }) {
+export function ProtocolTab({ steps }: { steps: ProtocolStep[] }) {
   const [active, setActive] = useState<number | null>(null);
-  if (isLoading && !steps.length) {
-    return (
-      <div className="animate-praxis-fade flex items-center justify-center font-mono text-[11px] text-ax-amber tracking-[0.15em] border border-ax-amber/30 p-8">
-        PROTOCOL AGENT RUNNING…
-      </div>
-    );
-  }
   if (!steps.length) return <Empty>No protocol generated yet.</Empty>;
   return (
     <div className="animate-praxis-fade flex flex-col gap-4">

@@ -7,10 +7,10 @@ interface Props {
 }
 
 const BUCKETS = [
-  { key: "IN VITRO BIOCHEMICAL", match: ["in vitro", "biochemical", "enzyme", "binding", "kinetic"] },
-  { key: "CELL-BASED ASSAYS",    match: ["cell", "culture", "viability", "cytotox", "minimum inhibitory", "mic"] },
-  { key: "ANIMAL MODELS",        match: ["mouse", "murine", "rat", "in vivo", "animal", "infection model"] },
-  { key: "CLINICAL DATA",        match: ["patient", "clinical", "trial", "human", "phase i", "phase ii"] },
+  { key: "in_vitro_biochemical", label: "IN VITRO BIOCHEMICAL", color: "#9d6fff", match: ["in vitro", "biochemical", "enzyme", "binding", "kinetic"] },
+  { key: "cell_based_assays", label: "CELL-BASED ASSAYS", color: "#4d9fff", match: ["cell", "culture", "viability", "cytotox", "minimum inhibitory", "mic"] },
+  { key: "animal_models", label: "ANIMAL MODELS", color: "#00d97e", match: ["mouse", "murine", "rat", "in vivo", "animal", "infection model"] },
+  { key: "clinical_data", label: "CLINICAL DATA", color: "#f0a500", match: ["patient", "clinical", "trial", "human", "phase i", "phase ii"] },
 ];
 
 function classify(p: Paper): number {
@@ -33,16 +33,38 @@ function paperYear(p: Paper): number | null {
   return null;
 }
 
-export function EvidenceLandscape({ papers, height = 200 }: Props) {
+export function EvidenceLandscape({ papers, height = 280 }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const now = new Date().getFullYear();
+
+  // Empty state
+  if (!papers || papers.length === 0) {
+    return (
+      <div 
+        className="bg-card border border-border flex items-center justify-center font-mono"
+        style={{ height, padding: 12 }}
+      >
+        <div 
+          style={{ 
+            fontSize: 10, 
+            color: "#5a7a9a", 
+            letterSpacing: "0.2em",
+            animation: "praxis-pulse 2s ease-in-out infinite"
+          }}
+        >
+          EVIDENCE LANDSCAPE AGENT RUNNING...
+        </div>
+        <style>{`@keyframes praxis-pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }`}</style>
+      </div>
+    );
+  }
 
   const dots = useMemo(() => {
     const arr: Array<{ year: number; bucket: number; r: number; paper: Paper }> = [];
     papers.forEach((p) => {
       const y = paperYear(p);
       if (y === null) return;
-      arr.push({ year: y, bucket: classify(p), r: 4 + 8 * Math.max(0, Math.min(1, p.relevance ?? 0.5)), paper: p });
+      arr.push({ year: y, bucket: classify(p), r: 10, paper: p });
     });
     return arr;
   }, [papers]);
@@ -50,15 +72,14 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
   const minYear = dots.length ? Math.min(...dots.map((d) => d.year), now - 10) : now - 10;
   const maxYear = now;
 
-  const filledBuckets = new Set(dots.map((d) => d.bucket)).size;
+  // Evidence score: rows with at least 1 paper / 4 rows
+  const populatedBuckets = new Set(dots.map((d) => d.bucket));
+  const filledBuckets = populatedBuckets.size;
   const score = Math.round((filledBuckets / BUCKETS.length) * 100);
-  const scoreColor =
-    score > 70 ? "hsl(var(--foreground))"
-    : score >= 40 ? "hsl(var(--accent-amber))"
-    : "hsl(var(--destructive))";
+  const scoreColor = score > 75 ? "#00d97e" : score >= 50 ? "#f0a500" : "#ff4d4d";
 
-  // Layout
-  const padL = 140, padR = 110, padT = 16, padB = 26;
+  // Layout - increased left padding for full labels
+  const padL = 200, padR = 110, padT = 24, padB = 36;
   const W = 1000; // viewBox width — scales via preserveAspectRatio
   const H = height;
   const innerW = W - padL - padR;
@@ -68,9 +89,6 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
   const xFor = (y: number) => padL + ((y - minYear) / Math.max(1, maxYear - minYear)) * innerW;
   const yFor = (b: number) => padT + rowH * b + rowH / 2;
 
-  // Knowledge gap detection — find empty rows and empty year ranges
-  const populated = new Set(dots.map((d) => d.bucket));
-
   // X ticks every ~ (maxYear - minYear) / 5
   const yearSpan = Math.max(1, maxYear - minYear);
   const tickStep = Math.max(1, Math.round(yearSpan / 5));
@@ -79,9 +97,9 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
   if (ticks[ticks.length - 1] !== maxYear) ticks.push(maxYear);
 
   return (
-    <div className="bg-card border border-border" style={{ padding: 12 }}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-mono uppercase text-text-muted" style={{ fontSize: 9, letterSpacing: "0.2em" }}>
+    <div className="bg-card border border-border" style={{ padding: 16 }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.2em" }}>
           EVIDENCE LANDSCAPE · {dots.length} PAPERS PLOTTED
         </div>
         <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: "0.18em", color: scoreColor }}>
@@ -89,31 +107,39 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" style={{ display: "block" }}>
+      <svg 
+        viewBox={`0 0 ${W} ${H}`} 
+        width="100%" 
+        height={H} 
+        preserveAspectRatio="xMidYMid meet" 
+        style={{ display: "block", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}
+      >
         <defs>
-          <pattern id="evidGapHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="6" stroke="hsl(var(--destructive))" strokeOpacity="0.18" strokeWidth="1" />
+          <pattern id="evidGapHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#ff4d4d" strokeOpacity="0.15" strokeWidth="1" />
           </pattern>
         </defs>
 
         {/* Bucket rows + labels + gap hatching */}
         {BUCKETS.map((b, i) => {
           const y = padT + rowH * i;
-          const isGap = !populated.has(i);
+          const isGap = !populatedBuckets.has(i);
           return (
             <g key={b.key}>
+              {/* Only show hatching on truly empty rows */}
               {isGap && (
                 <>
                   <rect x={padL} y={y + 2} width={innerW} height={rowH - 4} fill="url(#evidGapHatch)" />
                   <text x={padL + innerW / 2} y={y + rowH / 2 + 3} textAnchor="middle"
-                    fontFamily="'IBM Plex Mono', monospace" fontSize="9" fill="hsl(var(--destructive))" opacity="0.55"
+                    fontSize="9" fill="#ff4d4d" opacity="0.55"
                     letterSpacing="0.2em">KNOWLEDGE GAP</text>
                 </>
               )}
-              <line x1={padL} y1={y + rowH} x2={W - padR} y2={y + rowH} stroke="hsl(var(--border))" strokeWidth="1" strokeOpacity="0.4" />
-              <text x={padL - 12} y={y + rowH / 2 + 3} textAnchor="end"
-                fontFamily="'IBM Plex Mono', monospace" fontSize="9" fill="hsl(var(--text-muted))" letterSpacing="0.15em">
-                {b.key}
+              <line x1={padL} y1={y + rowH} x2={W - padR} y2={y + rowH} stroke="#1a2f50" strokeWidth="1" strokeOpacity="0.4" />
+              {/* Row label - fully visible */}
+              <text x={padL - 16} y={y + rowH / 2 + 3} textAnchor="end"
+                fontSize="9" fill="#5a7a9a" letterSpacing="0.15em" textTransform="uppercase">
+                {b.label}
               </text>
             </g>
           );
@@ -122,9 +148,9 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
         {/* X ticks */}
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={xFor(t)} y1={padT} x2={xFor(t)} y2={H - padB} stroke="hsl(var(--border))" strokeOpacity="0.25" strokeWidth="1" />
-            <text x={xFor(t)} y={H - padB + 14} textAnchor="middle"
-              fontFamily="'IBM Plex Mono', monospace" fontSize="8" fill="hsl(var(--text-muted))" letterSpacing="0.15em">
+            <line x1={xFor(t)} y1={padT} x2={xFor(t)} y2={H - padB} stroke="#1a2f50" strokeOpacity="0.25" strokeWidth="1" />
+            <text x={xFor(t)} y={H - padB + 18} textAnchor="middle"
+              fontSize="8" fill="#5a7a9a" letterSpacing="0.15em">
               {t}
             </text>
           </g>
@@ -133,36 +159,47 @@ export function EvidenceLandscape({ papers, height = 200 }: Props) {
         {/* TODAY marker */}
         <g>
           <line x1={xFor(now)} y1={padT} x2={xFor(now)} y2={H - padB}
-            stroke="hsl(var(--accent-amber))" strokeWidth="1.5" strokeDasharray="4 3" />
-          <text x={xFor(now) + 4} y={padT + 10}
-            fontFamily="'IBM Plex Mono', monospace" fontSize="8" fill="hsl(var(--accent-amber))" letterSpacing="0.2em">
+            stroke="#f0a50066" strokeWidth="1.5" strokeDasharray="4 4" />
+          <text x={xFor(now)} y={padT - 6} textAnchor="middle"
+            fontSize="8" fill="#f0a500" letterSpacing="0.2em">
             TODAY
           </text>
         </g>
 
-        {/* Dots */}
+        {/* Dots - colored by evidence type */}
         {dots.map((d, i) => {
           const cx = xFor(d.year);
           const cy = yFor(d.bucket);
           const isHover = hover === i;
+          const dotColor = BUCKETS[d.bucket].color;
           return (
             <g key={i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: "pointer" }}>
-              <circle cx={cx} cy={cy} r={d.r}
-                fill="hsl(var(--foreground))" fillOpacity={isHover ? 0.95 : 0.65}
-                stroke="hsl(var(--foreground))" strokeOpacity={isHover ? 1 : 0.4} strokeWidth="1" />
+              <circle 
+                cx={cx} 
+                cy={cy} 
+                r={10}
+                fill={dotColor} 
+                fillOpacity={isHover ? 0.95 : 0.85}
+                stroke={dotColor} 
+                strokeWidth="1.5"
+              />
             </g>
           );
         })}
       </svg>
 
       {/* Hover tooltip */}
-      <div style={{ minHeight: 28 }} className="mt-1">
+      <div style={{ minHeight: 32 }} className="mt-2">
         {hover !== null && dots[hover] && (
           <div className="font-mono text-foreground" style={{ fontSize: 10, lineHeight: 1.5 }}>
-            <span className="text-text-muted">{dots[hover].year} · {BUCKETS[dots[hover].bucket].key}</span> — {dots[hover].paper.title}
+            <span style={{ color: BUCKETS[dots[hover].bucket].color }}>{dots[hover].year} · {BUCKETS[dots[hover].bucket].label}</span>
+            <span style={{ color: "#5a7a9a" }}> — </span>
+            <span style={{ color: "#e2eaf5" }}>{dots[hover].paper.title}</span>
           </div>
         )}
       </div>
     </div>
   );
 }
+
+export default EvidenceLandscape;

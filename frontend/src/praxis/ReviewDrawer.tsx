@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { getApiBase } from "@/lib/apiBase";
 import { BudgetData, ProtocolStep, TamarindData } from "./lib/types";
 
 type Role = "PI" | "POSTDOC" | "GRAD STUDENT" | "LAB TECH";
@@ -162,14 +161,11 @@ export function ReviewDrawer({ open, onClose, protocol, budget, tamarind }: Prop
         })),
     };
     try {
-      const base = getApiBase();
-      if (base) {
-        await fetch(`${base}/review/submit`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        }).catch(() => undefined);
-      }
+      await fetch("/review/submit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => undefined);
     } finally {
       const next = [...loadPriorReviews(), payload];
       savePriorReviews(next);

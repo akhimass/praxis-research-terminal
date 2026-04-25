@@ -11,10 +11,6 @@ interface Props {
   papers: Paper[];
   tamarind: TamarindData | null;
   isStructureLoading?: boolean;
-  /** Alias: literature agent still streaming */
-  isLoadingLiterature?: boolean;
-  /** Alias: structure / tamarind agent still streaming */
-  isLoadingTamarind?: boolean;
   literatureStatus?: LiteratureStatus;
   novelty?: NoveltySignal;
   hypothesisTerms?: string;
@@ -22,25 +18,14 @@ interface Props {
 }
 
 export function ScienceTab({
-  papers,
-  tamarind,
-  isStructureLoading = false,
-  isLoadingLiterature = false,
-  isLoadingTamarind = false,
+  papers, tamarind, isStructureLoading = false,
   literatureStatus = "ok",
   novelty,
   hypothesisTerms,
   onRetry,
 }: Props) {
-  const litBusy = isLoadingLiterature;
-  const structBusy = isLoadingTamarind || isStructureLoading;
   return (
     <div className="flex flex-col gap-4 w-full animate-praxis-fade">
-      {litBusy && (
-        <div className="font-mono text-[10px] tracking-[0.15em] text-ax-amber border border-ax-amber/30 px-2 py-1 w-fit">
-          LITERATURE AGENT RUNNING…
-        </div>
-      )}
       <div className="grid w-full" style={{ gridTemplateColumns: "55fr 45fr", gap: 16, minHeight: 320 }}>
         <LiteratureColumn
           papers={papers}
@@ -50,7 +35,7 @@ export function ScienceTab({
           onRetry={onRetry}
         />
         <div className="min-h-0">
-          <ProteinViewer tamarind={tamarind} isLoading={structBusy} onRetry={onRetry} />
+          <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} onRetry={onRetry} />
         </div>
       </div>
       {papers.length > 0 && <EvidenceLandscape papers={papers} />}

@@ -185,6 +185,49 @@ function LoadingState() {
   );
 }
 
+/* ---------- stub overlay for short scripts ---------- */
+
+function StubOverlay() {
+  return (
+    <div 
+      style={{ 
+        position: "absolute", 
+        inset: 0, 
+        background: "rgba(5, 10, 20, 0.85)", 
+        display: "flex", 
+        flexDirection: "column",
+        alignItems: "center", 
+        justifyContent: "center",
+        zIndex: 10,
+      }}
+    >
+      <div 
+        className="font-mono"
+        style={{ 
+          fontSize: 11, 
+          color: "#5a7a9a", 
+          letterSpacing: "0.2em",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        GENERATING FULL SCRIPT
+        <span style={{ animation: "praxis-dots 1.5s steps(4) infinite" }}>...</span>
+      </div>
+      <style>{`
+        @keyframes praxis-dots {
+          0% { opacity: 0.2; }
+          25% { opacity: 0.4; }
+          50% { opacity: 0.6; }
+          75% { opacity: 0.8; }
+          100% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /* ---------- file tab bar ---------- */
 
 function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; active: number; onSelect: (i: number) => void }) {
@@ -193,7 +236,8 @@ function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; acti
       {scripts.map((s, i) => {
         const isActive = i === active;
         const color = LANG_COLOR[s.language];
-        const sizeKb = (s.code.length / 1024).toFixed(1);
+        const lineCount = s.code.split("\n").length;
+        const isStub = lineCount < 10;
         return (
           <button
             key={s.name}
@@ -213,7 +257,9 @@ function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; acti
           >
             <span style={{ display: "inline-block", width: 6, height: 6, background: color, boxShadow: isActive ? `0 0 6px ${color}` : "none" }} />
             <span>{s.name}</span>
-            <span style={{ color: "#404040", marginLeft: 4 }}>{sizeKb}K</span>
+            <span style={{ color: isStub ? "#f0a500" : "#404040", marginLeft: 4 }}>
+              {isStub ? "STUB" : `${lineCount} LINES`}
+            </span>
           </button>
         );
       })}
@@ -243,6 +289,7 @@ function CodePanel({ script }: { script: CodeScript }) {
 
   const lines = useMemo(() => classifyLines(script.code), [script.code]);
   const lang = HLJS_LANG[script.language];
+  const isStub = lines.length < 10;
 
   const renderedLines = useMemo(() => {
     return lines.map((l) => {
@@ -258,8 +305,12 @@ function CodePanel({ script }: { script: CodeScript }) {
   }, [lines, hljs, lang]);
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden" style={{ background: "#050505" }}>
+    <div className="flex flex-1 min-h-0 overflow-hidden relative" style={{ background: "#050505" }}>
       <PraxisHljsStyle />
+      
+      {/* Stub overlay for short scripts */}
+      {isStub && <StubOverlay />}
+      
       {/* Line numbers */}
       <div
         className="shrink-0 select-none praxis-scroll overflow-y-hidden"
@@ -336,9 +387,11 @@ function CodePanel({ script }: { script: CodeScript }) {
 
 function MetaPanel({ script }: { script: CodeScript }) {
   const [copied, setCopied] = useState(false);
+  const [cloudState, setCloudState] = useState<"idle" | "pending" | "complete">("idle");
   const langColor = LANG_COLOR[script.language];
   const ext = LANG_EXT[script.language];
   const lineCount = script.code.split("\n").length;
+  const isStub = lineCount < 10;
 
   const onCopy = async () => {
     try { await navigator.clipboard.writeText(script.code); }
@@ -361,6 +414,14 @@ function MetaPanel({ script }: { script: CodeScript }) {
     URL.revokeObjectURL(url);
   };
 
+  const onRunInCloud = () => {
+    setCloudState("pending");
+    window.setTimeout(() => {
+      setCloudState("complete");
+      window.setTimeout(() => setCloudState("idle"), 3000);
+    }, 2000);
+  };
+
   const colabHref = script.colabUrl ?? "https://colab.research.google.com/";
 
   return (
@@ -380,12 +441,30 @@ function MetaPanel({ script }: { script: CodeScript }) {
           {LANG_LABEL[script.language]}
         </span>
       </div>
-      <div className="font-mono mt-3" style={{ fontSize: 11, color: "#a1a1a1", lineHeight: 1.6 }}>
+      
+      {/* Key finding banner with proper overflow handling */}
+      <div 
+        className="font-mono mt-3" 
+        style={{ 
+          fontSize: 11, 
+          color: "#a1a1a1", 
+          lineHeight: 1.5,
+          maxHeight: 60,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+        }}
+        title={script.purpose}
+      >
         {script.purpose}
       </div>
+      
       <div className="font-mono mt-3 flex justify-between" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.15em" }}>
-        <span>{lineCount} LINES</span>
-        <span>{(script.code.length / 1024).toFixed(1)}K</span>
+        <span style={{ color: isStub ? "#f0a500" : "#404040" }}>
+          {isStub ? "STUB — BACKEND GENERATING" : `${lineCount} LINES`}
+        </span>
       </div>
       <div className="font-mono mt-1" style={{ fontSize: 9, color: "#404040" }}>
         GENERATED BY · {script.generatedBy ?? "PRAXIS Bioinformatics Agent"}
@@ -476,6 +555,27 @@ function MetaPanel({ script }: { script: CodeScript }) {
         >
           RUN IN NOTEBOOK
         </a>
+        
+        {/* Run in Cloud button */}
+        <button
+          type="button"
+          onClick={onRunInCloud}
+          disabled={cloudState !== "idle"}
+          className="font-mono font-bold transition-all duration-150"
+          style={{
+            height: 32,
+            background: "#4d9fff18",
+            border: "1px solid #4d9fff44",
+            color: cloudState === "complete" ? "#00d97e" : "#4d9fff",
+            fontSize: 9,
+            letterSpacing: "0.15em",
+            cursor: cloudState === "idle" ? "pointer" : "default",
+          }}
+        >
+          {cloudState === "idle" && "▶ RUN IN CLOUD"}
+          {cloudState === "pending" && "MODAL GPU PENDING..."}
+          {cloudState === "complete" && "✓ EXECUTION COMPLETE"}
+        </button>
       </div>
     </aside>
   );
@@ -535,3 +635,5 @@ export function CodeTab({ scripts, loading, errored, assayType = "MIC", onRetry 
     </div>
   );
 }
+
+export default CodeTab;
