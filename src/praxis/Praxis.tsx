@@ -13,11 +13,13 @@ import { RisksTab } from "./tabs/RisksTab";
 import { CodeTab } from "./tabs/CodeTab";
 import { BudgetTab } from "./tabs/BudgetTab";
 import { FundingTab } from "./tabs/FundingTab";
+import { ReviewDrawer } from "./ReviewDrawer";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 
 export function Praxis() {
   const { state, run, dismissKeyFinding } = usePraxisPipeline();
   const [tab, setTab] = useState<TabId>("SCIENCE");
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const anyData = Object.values(state.hasData).some(Boolean);
 
@@ -26,7 +28,7 @@ export function Praxis() {
       className="flex flex-col h-screen w-screen text-foreground font-mono overflow-hidden"
       style={{ background: "#050a14" }}
     >
-      <Header status={state.status} />
+      <Header status={state.status} onReviewClick={() => setReviewOpen(true)} />
 
       <div className="flex flex-1 min-h-0">
         {/* ZONE B */}
@@ -86,6 +88,13 @@ export function Praxis() {
           </section>
         </main>
       </div>
+      <ReviewDrawer
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        protocol={state.protocol}
+        budget={state.budget}
+        tamarind={state.tamarind}
+      />
     </div>
   );
 }
