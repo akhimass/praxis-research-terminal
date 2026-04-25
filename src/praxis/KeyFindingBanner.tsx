@@ -1,28 +1,26 @@
+import { Button } from "@/components/ui/button";
+
 interface Props { text: string; onDismiss: () => void; }
+
 export function KeyFindingBanner({ text, onDismiss }: Props) {
   return (
-    <div
-      className="flex items-center justify-between gap-4 px-5 py-3 animate-praxis-fade"
-      style={{ background: "#00d97e10", borderBottom: "1px solid #00d97e44" }}
-    >
-      <span
-        className="font-mono font-bold shrink-0"
-        style={{ fontSize: 10, letterSpacing: "0.2em", color: "#00d97e" }}
-      >
-        ◆ KEY FINDING
+    <div className="flex items-center justify-between gap-4 px-5 py-3 animate-praxis-fade bg-ax-green/10 border-b border-ax-green/40">
+      <span className="shrink-0 text-[11px] font-bold tracking-[0.2em] uppercase text-ax-green">
+        ◆ Key Finding
       </span>
-      <span className="font-mono flex-1" style={{ fontSize: 11, color: "#e2eaf5" }}>
+      <span className="flex-1 text-[12px] text-foreground">
         {text}
       </span>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={onDismiss}
-        className="font-mono"
-        style={{ fontSize: 14, color: "#5a7a9a", cursor: "pointer", padding: "0 8px", background: "transparent", border: "none" }}
         aria-label="Dismiss key finding"
+        className="h-6 w-6 p-0 text-text-dim hover:text-foreground hover:bg-transparent"
       >
         ×
-      </button>
+      </Button>
     </div>
   );
 }

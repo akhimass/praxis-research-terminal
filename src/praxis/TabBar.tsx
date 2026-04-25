@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export type TabId = "SCIENCE" | "PROTOCOL" | "CODE" | "BUDGET" | "FUNDING" | "RISKS";
 export const TABS: { id: TabId; dot: string }[] = [
   { id: "SCIENCE",  dot: "#9d6fff" },
@@ -16,7 +18,7 @@ interface Props {
 
 export function TabBar({ active, onChange, hasData }: Props) {
   return (
-    <div className="flex items-stretch" style={{ borderBottom: "1px solid #1a2f50", background: "#050a14" }}>
+    <div className="flex items-stretch border-b border-border bg-background">
       {TABS.map((t) => {
         const isActive = active === t.id;
         const dataKey = t.id.toLowerCase() as Lowercase<TabId>;
@@ -26,25 +28,18 @@ export function TabBar({ active, onChange, hasData }: Props) {
             key={t.id}
             type="button"
             onClick={() => onChange(t.id)}
-            className="font-mono font-bold uppercase transition-all duration-150 relative"
-            style={{
-              width: 120,
-              height: 40,
-              fontSize: 10,
-              letterSpacing: "0.15em",
-              background: isActive ? "#0d1e35" : "transparent",
-              borderBottom: isActive ? "2px solid #00d97e" : "2px solid transparent",
-              color: isActive ? "#e2eaf5" : "#2a4060",
-              cursor: "pointer",
-            }}
+            className={cn(
+              "relative w-[120px] h-10 text-[11px] font-semibold uppercase tracking-[0.15em] transition-all border-b-2",
+              isActive
+                ? "bg-card text-foreground border-ax-green"
+                : "bg-transparent text-text-muted border-transparent hover:text-text-dim",
+            )}
           >
             {t.id}
             {has && (
               <span
+                className="absolute top-2 right-3.5 w-1 h-1"
                 style={{
-                  position: "absolute",
-                  top: 8, right: 14,
-                  width: 4, height: 4,
                   background: t.dot,
                   boxShadow: `0 0 6px ${t.dot}`,
                 }}
