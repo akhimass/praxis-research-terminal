@@ -80,6 +80,23 @@ export interface CodeScript {
   generatedBy?: string;
 }
 
+export type ReagentPhase = 1 | 2 | 3;
+
+export interface Reagent {
+  name: string;
+  vendor: string;       // short label, e.g. "Sigma"
+  vendorFull?: string;  // full name for tooltip
+  catalog: string;
+  unitPrice: number;
+  qty: number;
+  phase: ReagentPhase;
+}
+
+export interface BudgetData {
+  reagents: Reagent[];
+  estimatedWeeks?: number;
+}
+
 export const AGENTS: AgentMeta[] = [
   { id: "context",        index: "01", label: "CONTEXT",        color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
   { id: "literature",     index: "02", label: "LITERATURE",     color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
