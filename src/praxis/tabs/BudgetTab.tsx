@@ -509,6 +509,7 @@ function Row({
 
   const tier = totalColor(row.total);
   const phaseColor = PHASE_COLOR[row.phase];
+  const isUnmatched = !row.catalog || row.catalog.trim() === "" || row.catalog === "—";
 
   const commitQty = () => {
     const n = Math.max(1, Math.floor(Number(draftQty) || row.qty));
@@ -528,7 +529,9 @@ function Row({
     window.setTimeout(() => setCopiedFlash(false), 700);
   };
 
-  const rowBg = selected ? "#111111" : hover ? "#11111180" : "transparent";
+  const rowBg = isUnmatched
+    ? (selected ? "hsl(var(--accent-amber) / 0.16)" : hover ? "hsl(var(--accent-amber) / 0.12)" : "hsl(var(--accent-amber) / 0.07)")
+    : selected ? "#111111" : hover ? "#11111180" : "transparent";
 
   const cell: React.CSSProperties = {
     padding: "0 12px",
