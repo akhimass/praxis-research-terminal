@@ -4,12 +4,14 @@ import {
   AGENTS,
   AgentRecord,
   AuditFlag,
+  BudgetData,
   CodeScript,
   GlobalStatus,
   Paper,
   ProtocolStep,
   TamarindData,
   TraceEntry,
+  Reagent,
 } from "./types";
 
 const DEMO_SCRIPTS: CodeScript[] = [
@@ -154,7 +156,7 @@ interface State {
   trace: TraceEntry[];
   papers: Paper[];
   protocol: ProtocolStep[];
-  reagents: any[];
+  budget: BudgetData;
   timeline: any | null;
   funding: any | null;
   gtm: any | null;
@@ -177,7 +179,7 @@ const initialState: State = {
   trace: [],
   papers: [],
   protocol: [],
-  reagents: [],
+  budget: { reagents: [], estimatedWeeks: undefined },
   timeline: null,
   funding: null,
   gtm: null,
@@ -198,7 +200,7 @@ type Action =
   | { type: "TRACE"; entry: TraceEntry }
   | { type: "PAPERS"; papers: Paper[] }
   | { type: "PROTOCOL"; steps: ProtocolStep[] }
-  | { type: "REAGENTS"; data: any }
+  | { type: "REAGENTS"; data: BudgetData }
   | { type: "TIMELINE"; data: any }
   | { type: "FUNDING"; data: any }
   | { type: "GTM"; data: any }
@@ -242,7 +244,7 @@ function reducer(state: State, action: Action): State {
     case "PROTOCOL":
       return { ...state, protocol: action.steps, hasData: { ...state.hasData, protocol: true } };
     case "REAGENTS":
-      return { ...state, reagents: action.data, hasData: { ...state.hasData, budget: true } };
+      return { ...state, budget: action.data, hasData: { ...state.hasData, budget: action.data.reagents.length > 0 } };
     case "TIMELINE":
       return { ...state, timeline: action.data };
     case "FUNDING":
@@ -301,7 +303,12 @@ export function usePraxisPipeline() {
       dispatch({ type: "AGENT_COMPLETE", agent, data: payload });
       if (agent === "literature" && payload?.papers) dispatch({ type: "PAPERS", papers: payload.papers });
       if (agent === "protocol"   && payload?.steps)  dispatch({ type: "PROTOCOL", steps: payload.steps });
-      if (agent === "reagents")     dispatch({ type: "REAGENTS", data: payload?.reagents ?? payload });
+      if (agent === "reagents") {
+        const reagents: Reagent[] = Array.isArray(payload?.reagents)
+          ? payload.reagents
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "REAGENTS", data: { reagents, estimatedWeeks: payload?.estimatedWeeks } });
+      }
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
       if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
@@ -370,11 +377,7 @@ export function usePraxisPipeline() {
           });
         }
         if (agent.id === "reagents") {
-          dispatch({ type: "REAGENTS", data: { items: [
-            { name: "Mueller-Hinton broth", vendor: "BD", cost: 142 },
-            { name: "Ciprofloxacin reference standard", vendor: "Sigma", cost: 89 },
-            { name: "PCR mastermix 2x", vendor: "NEB", cost: 312 },
-          ], total: 543 } });
+          dispatch({ type: "REAGENTS", data: DEMO_BUDGET });
         }
         if (agent.id === "timeline") dispatch({ type: "TIMELINE", data: { weeks: 6, milestones: 4 } });
         if (agent.id === "funding") dispatch({ type: "FUNDING", data: { opportunities: [
