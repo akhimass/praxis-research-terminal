@@ -15,17 +15,51 @@ import { BudgetTab } from "./tabs/BudgetTab";
 import { FundingTab } from "./tabs/FundingTab";
 import { ReviewDrawer } from "./ReviewDrawer";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
+import { PrintableReport, type ResearchProgram } from "@/components/PrintableReport";
 
 export function Praxis() {
   const { state, run, dismissKeyFinding } = usePraxisPipeline();
   const [tab, setTab] = useState<TabId>("SCIENCE");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const anyData = Object.values(state.hasData).some(Boolean);
 
+  const program: ResearchProgram = {
+    hypothesis: state.keyFinding ? state.keyFinding : "",
+    papers: state.papers,
+    protocol: state.protocol,
+    budget: state.budget,
+    funding: state.funding,
+    audit: state.audit,
+    keyFinding: state.keyFinding,
+    estimatedWeeks: state.budget?.estimatedWeeks,
+    noveltySignal: "NOT FOUND",
+  };
+  // Use the first hypothesis trace entry if present.
+  const hypoTrace = state.trace.find((t) => t.message?.startsWith("hypothesis received"));
+  if (hypoTrace) {
+    program.hypothesis = hypoTrace.message.replace(/^hypothesis received · /, "");
+  }
+
+  const handleExport = () => {
+    setExporting(true);
+    // Allow paint of generating state, then trigger print.
+    setTimeout(() => {
+      window.print();
+      setExporting(false);
+    }, 300);
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground font-sans overflow-hidden">
-      <Header status={state.status} onReviewClick={() => setReviewOpen(true)} />
+      <Header
+        status={state.status}
+        onReviewClick={() => setReviewOpen(true)}
+        onExportClick={handleExport}
+        exportDisabled={!anyData}
+        exporting={exporting}
+      />
 
       <div className="flex flex-1 min-h-0">
         {/* ZONE B */}
@@ -89,6 +123,7 @@ export function Praxis() {
         budget={state.budget}
         tamarind={state.tamarind}
       />
+      <PrintableReport program={program} />
     </div>
   );
 }
