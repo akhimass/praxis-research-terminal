@@ -10,6 +10,7 @@ import { ScienceTab } from "./tabs/ScienceTab";
 import { ProtocolTab } from "./tabs/ProtocolTab";
 import { PlaceholderTab } from "./tabs/PlaceholderTab";
 import { RisksTab } from "./tabs/RisksTab";
+import { CodeTab } from "./tabs/CodeTab";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 
 export function Praxis() {
@@ -46,7 +47,10 @@ export function Praxis() {
           {state.keyFinding && (
             <KeyFindingBanner text={state.keyFinding} onDismiss={dismissKeyFinding} />
           )}
-          <section className="flex-1 overflow-y-auto praxis-scroll" style={{ padding: 20 }}>
+          <section
+            className={`flex-1 min-h-0 ${tab === "CODE" ? "overflow-hidden" : "overflow-y-auto praxis-scroll"}`}
+            style={tab === "CODE" ? { padding: 0 } : { padding: 20 }}
+          >
             {!anyData && state.status !== "RUNNING" ? (
               <EmptyState />
             ) : tab === "SCIENCE" ? (
@@ -55,6 +59,11 @@ export function Praxis() {
               <ProtocolTab steps={state.protocol} />
             ) : tab === "RISKS" ? (
               <RisksTab flags={state.audit} />
+            ) : tab === "CODE" ? (
+              <CodeTab
+                scripts={state.bioinformatics}
+                loading={state.agents.bioinformatics?.state === "running"}
+              />
             ) : (
               <PlaceholderTab name={tab} />
             )}

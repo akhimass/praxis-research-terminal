@@ -4,12 +4,149 @@ import {
   AGENTS,
   AgentRecord,
   AuditFlag,
+  CodeScript,
   GlobalStatus,
   Paper,
   ProtocolStep,
   TamarindData,
   TraceEntry,
 } from "./types";
+
+const DEMO_SCRIPTS: CodeScript[] = [
+  {
+    name: "mic_analysis.py",
+    language: "python",
+    purpose: "Compute MIC distributions per gyrA haplotype and produce a comparative box-plot for downstream resistance reporting.",
+    generatedBy: "PRAXIS Bioinformatics Agent",
+    requires: [
+      { name: "pandas", standard: true },
+      { name: "numpy", standard: true },
+      { name: "matplotlib", standard: true },
+      { name: "scipy", standard: true },
+      { name: "pydeseq2", standard: false },
+    ],
+    colabUrl: "https://colab.research.google.com/",
+    code: `# PRAXIS: generated bioinformatics module
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# USER: replace with your isolate table path
+ISOLATES_CSV = "data/isolates.csv"
+
+def load_isolates(path: str) -> pd.DataFrame:
+    """Load MIC + genotype table for clinical isolates."""
+    df = pd.read_csv(path)
+    df["mic_log2"] = np.log2(df["mic_ugml"].astype(float))
+    return df
+
+def haplotype(row) -> str:
+    s83 = row.get("gyrA_83", "WT")
+    d87 = row.get("gyrA_87", "WT")
+    return f"{s83}/{d87}"
+
+def summarize(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["haplotype"] = df.apply(haplotype, axis=1)
+    grouped = df.groupby("haplotype")["mic_log2"]
+    return grouped.agg(["count", "median", "mean", "std"]).reset_index()
+
+def plot_distribution(df: pd.DataFrame, out_png: str = "mic_dist.png"):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    df.boxplot(column="mic_log2", by="haplotype", ax=ax, grid=False)
+    ax.set_ylabel("log2 MIC (\u00b5g/mL)")
+    ax.set_title("MIC distribution by gyrA haplotype")
+    plt.suptitle("")
+    plt.tight_layout()
+    fig.savefig(out_png, dpi=200)
+    return out_png
+
+if __name__ == "__main__":
+    iso = load_isolates(ISOLATES_CSV)
+    summary = summarize(iso)
+    print(summary.to_string(index=False))
+    plot_distribution(iso)
+`,
+  },
+  {
+    name: "variant_call.py",
+    language: "python",
+    purpose: "Call codon 83 and 87 substitutions in the gyrA QRDR from aligned Sanger reads and emit a per-isolate haplotype table.",
+    generatedBy: "PRAXIS Bioinformatics Agent",
+    requires: [
+      { name: "biopython", standard: true },
+      { name: "pysam", standard: true },
+      { name: "scanpy", standard: false },
+    ],
+    code: `# PRAXIS: generated variant caller for gyrA QRDR
+from Bio import SeqIO
+from collections import defaultdict
+
+REFERENCE = "ATGAGCGACCTTGCGAGAGAAATTACAACCG"  # gyrA QRDR (truncated)
+CODON_OFFSETS = {83: 4, 87: 16}
+
+# USER: point at your aligned Sanger reads directory
+READS_DIR = "data/sanger/"
+
+def translate(codon: str) -> str:
+    table = {"TCT":"S","TCC":"S","TCA":"S","TCG":"S",
+             "TTA":"L","TTG":"L","CTT":"L","CTC":"L","CTA":"L","CTG":"L",
+             "GAC":"D","GAT":"D","AAC":"N","AAT":"N"}
+    return table.get(codon.upper(), "X")
+
+def call_isolate(seq: str) -> dict:
+    out = {}
+    for pos, off in CODON_OFFSETS.items():
+        codon = seq[off:off+3]
+        out[f"gyrA_{pos}"] = translate(codon)
+    return out
+
+def main():
+    rows = []
+    import glob, os
+    for path in glob.glob(os.path.join(READS_DIR, "*.fasta")):
+        rec = next(SeqIO.parse(path, "fasta"))
+        rows.append({"isolate": rec.id, **call_isolate(str(rec.seq))})
+    return rows
+
+if __name__ == "__main__":
+    for r in main():
+        print(r)
+`,
+  },
+  {
+    name: "resistance_plot.R",
+    language: "r",
+    purpose: "Render publication-grade ggplot2 figure summarizing fold-change in MIC across haplotypes with confidence intervals.",
+    generatedBy: "PRAXIS Bioinformatics Agent",
+    requires: [
+      { name: "ggplot2", standard: true },
+      { name: "dplyr", standard: true },
+      { name: "readr", standard: true },
+    ],
+    code: `# PRAXIS: generated R visualization
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+# USER: replace path with your summary CSV
+summary <- read_csv("mic_summary.csv")
+
+plot <- summary %>%
+  mutate(haplotype = factor(haplotype,
+         levels = c("WT/WT", "S83L/WT", "WT/D87N", "S83L/D87N"))) %>%
+  ggplot(aes(x = haplotype, y = median, fill = haplotype)) +
+  geom_col(width = 0.7) +
+  geom_errorbar(aes(ymin = median - std, ymax = median + std), width = 0.2) +
+  scale_fill_manual(values = c("#5a7a9a","#f0a500","#9d6fff","#ff4d4d")) +
+  labs(x = NULL, y = "log2 MIC", title = "MIC by gyrA haplotype") +
+  theme_minimal(base_size = 12)
+
+ggsave("resistance.png", plot, width = 7, height = 4.5, dpi = 220)
+`,
+  },
+];
 
 interface State {
   status: GlobalStatus;
@@ -21,7 +158,7 @@ interface State {
   timeline: any | null;
   funding: any | null;
   gtm: any | null;
-  bioinformatics: any | null;
+  bioinformatics: CodeScript[];
   tamarind: TamarindData | null;
   audit: AuditFlag[];
   keyFinding: string | null;
@@ -44,7 +181,7 @@ const initialState: State = {
   timeline: null,
   funding: null,
   gtm: null,
-  bioinformatics: null,
+  bioinformatics: [],
   tamarind: null,
   audit: [],
   keyFinding: null,
@@ -65,7 +202,7 @@ type Action =
   | { type: "TIMELINE"; data: any }
   | { type: "FUNDING"; data: any }
   | { type: "GTM"; data: any }
-  | { type: "BIOINFORMATICS"; data: any }
+  | { type: "BIOINFORMATICS"; data: CodeScript[] }
   | { type: "TAMARIND"; data: TamarindData }
   | { type: "AUDIT"; flags: AuditFlag[] }
   | { type: "KEY_FINDING"; text: string }
@@ -113,7 +250,7 @@ function reducer(state: State, action: Action): State {
     case "GTM":
       return { ...state, gtm: action.data };
     case "BIOINFORMATICS":
-      return { ...state, bioinformatics: action.data, hasData: { ...state.hasData, code: true } };
+      return { ...state, bioinformatics: action.data, hasData: { ...state.hasData, code: action.data.length > 0 } };
     case "TAMARIND":
       return { ...state, tamarind: action.data, hasData: { ...state.hasData, science: true } };
     case "AUDIT":
@@ -168,7 +305,12 @@ export function usePraxisPipeline() {
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
       if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
-      if (agent === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: payload });
+      if (agent === "bioinformatics") {
+        const scripts: CodeScript[] = Array.isArray(payload?.scripts)
+          ? payload.scripts
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "BIOINFORMATICS", data: scripts });
+      }
       return;
     }
     if (evt === "tamarind")    dispatch({ type: "TAMARIND", data: payload });
@@ -240,7 +382,7 @@ export function usePraxisPipeline() {
           { agency: "Wellcome Trust", program: "Discovery Award", amount: 600000, deadline: "2025-09-01" },
         ] } });
         if (agent.id === "gtm") dispatch({ type: "GTM", data: { tam: "1.2B", segments: ["clinical micro labs", "AMR surveillance"] } });
-        if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: { snippets: 3 } });
+        if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: DEMO_SCRIPTS });
       });
     });
 

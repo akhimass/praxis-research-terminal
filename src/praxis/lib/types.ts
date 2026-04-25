@@ -68,6 +68,18 @@ export interface TamarindData {
   source?: string;
 }
 
+export type CodeLang = "python" | "r" | "shell";
+
+export interface CodeScript {
+  name: string;          // filename incl. extension
+  language: CodeLang;
+  purpose: string;       // 1–2 sentences
+  code: string;
+  requires?: { name: string; standard: boolean }[];
+  colabUrl?: string;
+  generatedBy?: string;
+}
+
 export const AGENTS: AgentMeta[] = [
   { id: "context",        index: "01", label: "CONTEXT",        color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
   { id: "literature",     index: "02", label: "LITERATURE",     color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
