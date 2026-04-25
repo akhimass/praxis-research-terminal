@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
+.venv_deploy/
+*.egg-info/
+praxis_feedback.db
+**/praxis_feedback.db
+
+# Node
+node_modules/
+dist/
+.vite/
+frontend/.env
+frontend/.env.local
+
+# IDE
+.cursor/
+.vscode/
+.DS_Store

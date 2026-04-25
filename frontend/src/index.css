@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PRAXIS — AI Research Execution System design tokens.
+   All colors HSL. Sharp corners. No shadows (except glows). Mono everywhere.
+*/
+
+@layer base {
+  :root {
+    /* Core surfaces — shadcn black & white */
+    --background: 0 0% 0%;             /* #000 */
+    --foreground: 0 0% 98%;            /* near white */
+
+    --surface: 0 0% 4%;
+    --surface-deep: 0 0% 2%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 63%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 83%;
+
+    /* Accents — neutralized to greyscale, semantic ones kept subtle */
+    --accent-green:  0 0% 98%;
+    --accent-amber:  0 0% 70%;
+    --accent-red:    0 84% 60%;
+    --accent-blue:   0 0% 70%;
+    --accent-purple: 0 0% 70%;
+
+    /* Text scales */
+    --text-dim:   0 0% 63%;
+    --text-muted: 0 0% 45%;
+
+    --radius: 0px;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-feature-settings: 'ss01', 'zero';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* PRAXIS animations */
+@layer utilities {
+  @keyframes praxis-pulse-bg {
+    0%, 100% { background-color: hsl(var(--background)); }
+    50%      { background-color: hsl(var(--card)); }
+  }
+  .animate-praxis-pulse { animation: praxis-pulse-bg 1.5s ease-in-out infinite; }
+
+  @keyframes praxis-dots {
+    0%, 20%   { opacity: 0.2; }
+    50%       { opacity: 1; }
+    80%, 100% { opacity: 0.2; }
+  }
+  .animate-praxis-dots { animation: praxis-dots 1.2s ease-in-out infinite; }
+
+  @keyframes praxis-scanline {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(2400%); }
+  }
+  .animate-scanline {
+    position: absolute; left: 0; right: 0; height: 1px;
+    background: hsl(var(--accent-amber) / 0.35);
+    animation: praxis-scanline 2.4s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes praxis-status-pulse {
+    0%, 100% { background-color: hsl(var(--accent-amber) / 0.18); }
+    50%      { background-color: hsl(var(--accent-amber) / 0.45); }
+  }
+  .animate-status-pulse { animation: praxis-status-pulse 1.4s ease-in-out infinite; }
+
+  @keyframes praxis-spin-hex { to { transform: rotate(360deg); } }
+  .animate-hex-spin { animation: praxis-spin-hex 3s linear infinite; transform-origin: center; }
+
+  @keyframes praxis-spin { to { transform: rotate(360deg); } }
+  @keyframes praxis-pulse {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 1; }
+  }
+
+  @keyframes praxis-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .animate-praxis-fade { animation: praxis-fade-in 200ms ease-out; }
+
+  @keyframes praxis-log-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .animate-log-in { animation: praxis-log-in 100ms ease-out; }
+
+  .glow-green  { box-shadow: 0 0 20px hsl(var(--accent-green) / 0.13); }
+  .glow-amber  { box-shadow: 0 0 20px hsl(var(--accent-amber) / 0.13); }
+  .glow-red    { box-shadow: 0 0 20px hsl(var(--accent-red) / 0.13); }
+  .glow-blue   { box-shadow: 0 0 20px hsl(var(--accent-blue) / 0.13); }
+  .glow-purple { box-shadow: 0 0 20px hsl(var(--accent-purple) / 0.13); }
+
+  /* Custom scrollbar — terminal style */
+  .praxis-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .praxis-scroll::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  .praxis-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border)); }
+  .praxis-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-dim)); }
+
+  /* Skeleton shimmer — translated to neutral greyscale tokens */
+  @keyframes praxis-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .praxis-skeleton {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--border)) 50%,
+      hsl(var(--card)) 100%
+    );
+    background-size: 200% 100%;
+    animation: praxis-shimmer 1.8s ease-in-out infinite;
+    border-radius: 0;
+    display: block;
+  }
+}
