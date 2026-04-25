@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { Paper, TamarindData } from "../lib/types";
+import { ProteinViewer } from "../ProteinViewer";
 
-interface Props { papers: Paper[]; tamarind: TamarindData | null; }
+interface Props { papers: Paper[]; tamarind: TamarindData | null; isStructureLoading?: boolean; }
 
-export function ScienceTab({ papers, tamarind }: Props) {
+export function ScienceTab({ papers, tamarind, isStructureLoading = false }: Props) {
   return (
     <div className="grid w-full h-full animate-praxis-fade" style={{ gridTemplateColumns: "55fr 45fr", gap: 16 }}>
       <LiteratureColumn papers={papers} />
-      <ProteinViewer tamarind={tamarind} />
+      <div className="min-h-0">
+        <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} />
+      </div>
     </div>
   );
 }
@@ -68,61 +71,6 @@ function PaperCard({ paper }: { paper: Paper }) {
         </div>
       )}
     </div>
-  );
-}
-
-function ProteinViewer({ tamarind }: { tamarind: TamarindData | null }) {
-  const hasPdb = !!tamarind?.pdb;
-  return (
-    <div className="flex flex-col min-h-0">
-      <div className="font-mono mb-3 uppercase" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.2em" }}>
-        STRUCTURAL ANALYSIS · TAMARIND BIO
-      </div>
-      <div className="flex-1 flex items-center justify-center min-h-[280px]" style={{ background: "#050a14", border: hasPdb ? "1px solid #1a2f50" : "1px dashed #1a2f50" }}>
-        {!hasPdb ? (
-          <div className="flex flex-col items-center gap-3">
-            <Hexagon />
-            <div className="font-mono" style={{ fontSize: 10, color: "#5a7a9a", letterSpacing: "0.2em" }}>
-              {tamarind ? "ALPHAFOLD JOB COMPLETE — VIEWER PENDING" : "ALPHAFOLD JOB PENDING"}
-            </div>
-          </div>
-        ) : (
-          <div className="font-mono" style={{ fontSize: 10, color: "#5a7a9a" }}>3Dmol render slot</div>
-        )}
-      </div>
-      {tamarind && (
-        <div className="mt-3 flex flex-col gap-3">
-          <div>
-            <div className="flex justify-between font-mono mb-1" style={{ fontSize: 9, color: "#5a7a9a" }}>
-              <span>CONFIDENCE</span><span>{Math.round((tamarind.confidence ?? 0) * 100)}%</span>
-            </div>
-            <div style={{ height: 4, background: "#1a2f50" }}>
-              <div style={{ height: 4, width: `${(tamarind.confidence ?? 0) * 100}%`, background: "#00d97e" }} />
-            </div>
-          </div>
-          <div className="flex justify-between font-mono" style={{ fontSize: 9, color: "#5a7a9a" }}>
-            <span>RESIDUES · {tamarind.residues ?? "—"}</span>
-            <span>{tamarind.source}</span>
-          </div>
-          <div className="flex gap-2">
-            {["SPIN", "ZOOM IN", "ZOOM OUT", "RESET"].map((b) => (
-              <button key={b} className="font-mono" style={{ height: 24, padding: "0 10px", background: "transparent", border: "1px solid #1a2f50", color: "#5a7a9a", fontSize: 9, letterSpacing: "0.1em", cursor: "pointer" }}>
-                {b}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Hexagon() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" className="animate-hex-spin">
-      <polygon points="22,3 39,13 39,31 22,41 5,31 5,13" fill="none" stroke="#4d9fff" strokeWidth="1.5" />
-      <polygon points="22,11 32,17 32,27 22,33 12,27 12,17" fill="none" stroke="#4d9fff" strokeWidth="1" opacity="0.4" />
-    </svg>
   );
 }
 
