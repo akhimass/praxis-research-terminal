@@ -6,6 +6,8 @@ import {
   AuditFlag,
   BudgetData,
   CodeScript,
+  FundingData,
+  FundingGrant,
   GlobalStatus,
   Paper,
   ProtocolStep,
@@ -13,6 +15,171 @@ import {
   TraceEntry,
   Reagent,
 } from "./types";
+
+const DEMO_FUNDING: FundingData = {
+  grants: [
+    {
+      id: "niaid-r21-amr",
+      name: "R21 Exploratory/Developmental — Antimicrobial Resistance",
+      organization: "NIH NIAID",
+      type: "FEDERAL",
+      fit: 92,
+      amountMin: 275_000,
+      amountMax: 550_000,
+      followOn: 3_500_000,
+      deadline: "DATE",
+      deadlineDate: "2026-06-16",
+      nextReview: "October 2026",
+      url: "https://grants.nih.gov/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 96 },
+        { label: "STAGE ALIGNMENT",    score: 94 },
+        { label: "EVIDENCE REQUIRED",  score: 88 },
+        { label: "TECHNOLOGY FIT",     score: 90 },
+      ],
+      rationale:
+        "{{gyrA}} resistance maps directly to NIAID's AMR priority list, and exploratory mechanism work fits the R21 risk profile. Existing {{ciprofloxacin}} MIC data establishes preliminary feasibility.",
+      requirements: [
+        { text: "PI with R-grant eligibility", met: true },
+        { text: "Letter of support from clinical site", met: true },
+        { text: "Two-year scope, no preliminary data required", met: true },
+        { text: "IRB-approved isolate collection", met: false, satisfyHint: "Submit reliance agreement with partner microbiology lab." },
+      ],
+    },
+    {
+      id: "wellcome-discovery",
+      name: "Discovery Award — Infection & Immunity",
+      organization: "Wellcome Trust",
+      type: "PRIVATE",
+      fit: 84,
+      amountMin: 500_000,
+      amountMax: 2_000_000,
+      followOn: 4_000_000,
+      deadline: "DATE",
+      deadlineDate: "2026-09-01",
+      nextReview: "March 2027",
+      url: "https://wellcome.org/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 88 },
+        { label: "STAGE ALIGNMENT",    score: 81 },
+        { label: "EVIDENCE REQUIRED",  score: 86 },
+        { label: "TECHNOLOGY FIT",     score: 78 },
+      ],
+      rationale:
+        "Wellcome's bold-discovery framing welcomes mechanism-of-resistance proposals, and {{S83L}}/{{D87N}} epistasis is a strong narrative. Stage fit is moderate — they prefer larger consortia.",
+      requirements: [
+        { text: "Lead applicant at eligible UK/Ireland/LMIC institution", met: false, satisfyHint: "Add Wellcome-eligible co-PI as lead applicant." },
+        { text: "Open-data plan for genomic outputs", met: true },
+        { text: "Public-engagement component", met: true },
+        { text: "Three-year programmatic plan", met: true },
+      ],
+    },
+    {
+      id: "cdc-broad-agency",
+      name: "BAA-2026-AMR Surveillance Innovation",
+      organization: "CDC OAMR",
+      type: "FEDERAL",
+      fit: 76,
+      amountMin: 250_000,
+      amountMax: 1_200_000,
+      deadline: "ROLLING",
+      nextReview: "Quarterly review",
+      url: "https://www.cdc.gov/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 90 },
+        { label: "STAGE ALIGNMENT",    score: 65 },
+        { label: "EVIDENCE REQUIRED",  score: 78 },
+        { label: "TECHNOLOGY FIT",     score: 70 },
+      ],
+      rationale:
+        "Strong topical fit on {{AMR}} surveillance, but CDC prefers ready-to-deploy assays over discovery-stage mechanism work. A surveillance-ready output would lift stage alignment quickly.",
+      requirements: [
+        { text: "Domestic (US) prime applicant", met: true },
+        { text: "Validated assay or surveillance pipeline", met: false, satisfyHint: "Demonstrate the gyrA caller on ≥50 retrospective isolates." },
+        { text: "Data-sharing with NARMS", met: true },
+      ],
+    },
+    {
+      id: "gates-grand-challenges",
+      name: "Grand Challenges — Drug-Resistant Infections",
+      organization: "Gates Foundation",
+      type: "PRIVATE",
+      fit: 68,
+      amountMin: 100_000,
+      amountMax: 250_000,
+      followOn: 1_000_000,
+      deadline: "DATE",
+      deadlineDate: "2026-05-12",
+      nextReview: "Annual call",
+      url: "https://gcgh.grandchallenges.org/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 78 },
+        { label: "STAGE ALIGNMENT",    score: 72 },
+        { label: "EVIDENCE REQUIRED",  score: 60 },
+        { label: "TECHNOLOGY FIT",     score: 62 },
+      ],
+      rationale:
+        "Grand Challenges seeks LMIC-deployable solutions. The {{gyrA}} mechanism work is strong but lacks an obvious low-resource deployment pathway.",
+      requirements: [
+        { text: "LMIC partner institution", met: false, satisfyHint: "Identify a MIC-capable partner lab in target region." },
+        { text: "Pathway to <$5/test field assay", met: false, satisfyHint: "Outline isothermal amplification adaptation." },
+        { text: "Two-page concept note", met: true },
+      ],
+    },
+    {
+      id: "burroughs-pathogenesis",
+      name: "Investigators in Pathogenesis of Infectious Disease",
+      organization: "Burroughs Wellcome Fund",
+      type: "ACADEMIC",
+      fit: 58,
+      amountMin: 500_000,
+      amountMax: 500_000,
+      deadline: "DATE",
+      deadlineDate: "2026-11-01",
+      nextReview: "Annual",
+      url: "https://www.bwfund.org/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 70 },
+        { label: "STAGE ALIGNMENT",    score: 55 },
+        { label: "EVIDENCE REQUIRED",  score: 52 },
+        { label: "TECHNOLOGY FIT",     score: 55 },
+      ],
+      rationale:
+        "BWF favors basic-mechanism pathogenesis. {{Resistance}} mechanism work qualifies, but the program targets early-career assistant professors specifically.",
+      requirements: [
+        { text: "Tenure-track within 5 years of first faculty appointment", met: false, satisfyHint: "Confirm PI's first-appointment date is post-2021." },
+        { text: "US/Canada institution", met: true },
+        { text: "5-year research plan", met: true },
+      ],
+    },
+    {
+      id: "carb-x",
+      name: "CARB-X Funding Round 12",
+      organization: "CARB-X",
+      type: "PRIVATE",
+      fit: 47,
+      amountMin: 250_000,
+      amountMax: 4_000_000,
+      deadline: "DATE",
+      deadlineDate: "2026-12-15",
+      nextReview: "Annual",
+      url: "https://carb-x.org/",
+      fitBreakdown: [
+        { label: "DISEASE AREA MATCH", score: 80 },
+        { label: "STAGE ALIGNMENT",    score: 28 },
+        { label: "EVIDENCE REQUIRED",  score: 35 },
+        { label: "TECHNOLOGY FIT",     score: 45 },
+      ],
+      rationale:
+        "CARB-X funds product-stage antibacterial development. The current proposal is mechanism-of-resistance — a poor fit until a therapeutic or diagnostic product is defined.",
+      requirements: [
+        { text: "Defined product candidate (drug, diagnostic, or vaccine)", met: false, satisfyHint: "Spin out a diagnostic candidate from the gyrA caller." },
+        { text: "Pre-clinical data package", met: false, satisfyHint: "Generate in-vivo efficacy data." },
+        { text: "Commercialization pathway", met: false, satisfyHint: "Engage tech-transfer for an option agreement." },
+      ],
+    },
+  ],
+};
 
 const DEMO_BUDGET: BudgetData = {
   estimatedWeeks: 6,
@@ -180,7 +347,7 @@ interface State {
   protocol: ProtocolStep[];
   budget: BudgetData;
   timeline: any | null;
-  funding: any | null;
+  funding: FundingData;
   gtm: any | null;
   bioinformatics: CodeScript[];
   tamarind: TamarindData | null;
@@ -203,7 +370,7 @@ const initialState: State = {
   protocol: [],
   budget: { reagents: [], estimatedWeeks: undefined },
   timeline: null,
-  funding: null,
+  funding: { grants: [] },
   gtm: null,
   bioinformatics: [],
   tamarind: null,
@@ -224,7 +391,7 @@ type Action =
   | { type: "PROTOCOL"; steps: ProtocolStep[] }
   | { type: "REAGENTS"; data: BudgetData }
   | { type: "TIMELINE"; data: any }
-  | { type: "FUNDING"; data: any }
+  | { type: "FUNDING"; data: FundingData }
   | { type: "GTM"; data: any }
   | { type: "BIOINFORMATICS"; data: CodeScript[] }
   | { type: "TAMARIND"; data: TamarindData }
@@ -270,7 +437,7 @@ function reducer(state: State, action: Action): State {
     case "TIMELINE":
       return { ...state, timeline: action.data };
     case "FUNDING":
-      return { ...state, funding: action.data, hasData: { ...state.hasData, funding: true } };
+      return { ...state, funding: action.data, hasData: { ...state.hasData, funding: action.data.grants.length > 0 } };
     case "GTM":
       return { ...state, gtm: action.data };
     case "BIOINFORMATICS":
@@ -332,7 +499,13 @@ export function usePraxisPipeline() {
         dispatch({ type: "REAGENTS", data: { reagents, estimatedWeeks: payload?.estimatedWeeks } });
       }
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
-      if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
+      if (agent === "funding") {
+        const grants: FundingGrant[] = Array.isArray(payload?.grants)
+          ? payload.grants
+          : Array.isArray(payload?.opportunities) ? payload.opportunities
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "FUNDING", data: { grants } });
+      }
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
       if (agent === "bioinformatics") {
         const scripts: CodeScript[] = Array.isArray(payload?.scripts)
@@ -402,10 +575,7 @@ export function usePraxisPipeline() {
           dispatch({ type: "REAGENTS", data: DEMO_BUDGET });
         }
         if (agent.id === "timeline") dispatch({ type: "TIMELINE", data: { weeks: 6, milestones: 4 } });
-        if (agent.id === "funding") dispatch({ type: "FUNDING", data: { opportunities: [
-          { agency: "NIH NIAID", program: "R21 AI", amount: 275000, deadline: "2025-06-16" },
-          { agency: "Wellcome Trust", program: "Discovery Award", amount: 600000, deadline: "2025-09-01" },
-        ] } });
+        if (agent.id === "funding") dispatch({ type: "FUNDING", data: DEMO_FUNDING });
         if (agent.id === "gtm") dispatch({ type: "GTM", data: { tam: "1.2B", segments: ["clinical micro labs", "AMR surveillance"] } });
         if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: DEMO_SCRIPTS });
       });

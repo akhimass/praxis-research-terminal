@@ -12,6 +12,7 @@ import { PlaceholderTab } from "./tabs/PlaceholderTab";
 import { RisksTab } from "./tabs/RisksTab";
 import { CodeTab } from "./tabs/CodeTab";
 import { BudgetTab } from "./tabs/BudgetTab";
+import { FundingTab } from "./tabs/FundingTab";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 
 export function Praxis() {
@@ -49,8 +50,8 @@ export function Praxis() {
             <KeyFindingBanner text={state.keyFinding} onDismiss={dismissKeyFinding} />
           )}
           <section
-            className={`flex-1 min-h-0 ${tab === "CODE" || tab === "BUDGET" ? "overflow-hidden" : "overflow-y-auto praxis-scroll"}`}
-            style={tab === "CODE" || tab === "BUDGET" ? { padding: 0 } : { padding: 20 }}
+            className={`flex-1 min-h-0 ${tab === "CODE" || tab === "BUDGET" || tab === "FUNDING" ? "overflow-hidden" : "overflow-y-auto praxis-scroll"}`}
+            style={tab === "CODE" || tab === "BUDGET" || tab === "FUNDING" ? { padding: 0 } : { padding: 20 }}
           >
             {!anyData && state.status !== "RUNNING" ? (
               <EmptyState />
@@ -69,6 +70,11 @@ export function Praxis() {
               <BudgetTab
                 data={state.budget}
                 loading={state.agents.reagents?.state === "running"}
+              />
+            ) : tab === "FUNDING" ? (
+              <FundingTab
+                data={state.funding}
+                loading={state.agents.funding?.state === "running"}
               />
             ) : (
               <PlaceholderTab name={tab} />
