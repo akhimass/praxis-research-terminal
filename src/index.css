@@ -191,4 +191,22 @@
   .praxis-scroll::-webkit-scrollbar-track { background: hsl(var(--background)); }
   .praxis-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border)); }
   .praxis-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-dim)); }
+
+  /* Skeleton shimmer — translated to neutral greyscale tokens */
+  @keyframes praxis-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .praxis-skeleton {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--border)) 50%,
+      hsl(var(--card)) 100%
+    );
+    background-size: 200% 100%;
+    animation: praxis-shimmer 1.8s ease-in-out infinite;
+    border-radius: 0;
+    display: block;
+  }
 }
