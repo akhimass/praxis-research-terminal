@@ -92,7 +92,7 @@ export function Praxis() {
     CODE: state.agents.bioinformatics?.state === "running" && state.bioinformatics.length === 0,
     BUDGET: state.agents.reagents?.state === "running" && state.budget.reagents.length === 0,
     FUNDING: state.agents.funding?.state === "running" && state.funding.grants.length === 0,
-    RISKS: state.agents.audit?.state === "running" && state.audit.length === 0,
+    RISKS: state.status === "RUNNING" && state.audit.length === 0,
   };
 
   const program: ResearchProgram = {
