@@ -17,6 +17,11 @@ import { ReviewDrawer } from "./ReviewDrawer";
 import { BackendOfflineOverlay } from "./BackendOfflineOverlay";
 import { usePraxisPipeline } from "./lib/usePraxisPipeline";
 import { PrintableReport, type ResearchProgram } from "@/components/PrintableReport";
+import { SkeletonWrapper } from "@/components/SkeletonWrapper";
+import {
+  ScienceSkeleton, ProtocolSkeleton, CodeSkeleton,
+  BudgetSkeleton, FundingSkeleton, RisksSkeleton,
+} from "./skeletons/TabSkeletons";
 
 export function Praxis() {
   const { state, run, dismissKeyFinding, retry } = usePraxisPipeline();
@@ -79,6 +84,16 @@ export function Praxis() {
   const fundingErrored =
     state.agents.funding?.state === "error" ||
     (state.agents.funding?.state === "complete" && state.funding.grants.length === 0);
+
+  // A tab is "loading" when its agent is running AND no data has arrived yet.
+  const loading = {
+    SCIENCE: state.agents.literature?.state === "running" && state.papers.length === 0,
+    PROTOCOL: state.agents.protocol?.state === "running" && state.protocol.length === 0,
+    CODE: state.agents.bioinformatics?.state === "running" && state.bioinformatics.length === 0,
+    BUDGET: state.agents.reagents?.state === "running" && state.budget.reagents.length === 0,
+    FUNDING: state.agents.funding?.state === "running" && state.funding.grants.length === 0,
+    RISKS: state.agents.audit?.state === "running" && state.audit.length === 0,
+  };
 
   const program: ResearchProgram = {
     hypothesis: state.lastHypothesis ?? "",
@@ -152,39 +167,51 @@ export function Praxis() {
             {!anyData && state.status !== "RUNNING" ? (
               <EmptyState />
             ) : tab === "SCIENCE" ? (
-              <ScienceTab
-                papers={state.papers}
-                tamarind={state.tamarind}
-                isStructureLoading={state.agents.bioinformatics?.state === "running"}
-                literatureStatus={literatureStatus}
-                novelty={novelty}
-                hypothesisTerms={state.lastHypothesis ?? ""}
-                onRetry={retry}
-              />
+              <SkeletonWrapper isLoading={loading.SCIENCE} skeleton={<ScienceSkeleton />}>
+                <ScienceTab
+                  papers={state.papers}
+                  tamarind={state.tamarind}
+                  isStructureLoading={state.agents.bioinformatics?.state === "running"}
+                  literatureStatus={literatureStatus}
+                  novelty={novelty}
+                  hypothesisTerms={state.lastHypothesis ?? ""}
+                  onRetry={retry}
+                />
+              </SkeletonWrapper>
             ) : tab === "PROTOCOL" ? (
-              <ProtocolTab steps={state.protocol} />
+              <SkeletonWrapper isLoading={loading.PROTOCOL} skeleton={<ProtocolSkeleton />}>
+                <ProtocolTab steps={state.protocol} />
+              </SkeletonWrapper>
             ) : tab === "RISKS" ? (
-              <RisksTab flags={state.audit} />
+              <SkeletonWrapper isLoading={loading.RISKS} skeleton={<RisksSkeleton />}>
+                <RisksTab flags={state.audit} />
+              </SkeletonWrapper>
             ) : tab === "CODE" ? (
-              <CodeTab
-                scripts={state.bioinformatics}
-                loading={state.agents.bioinformatics?.state === "running"}
-                errored={codeErrored}
-                onRetry={retry}
-              />
+              <SkeletonWrapper isLoading={loading.CODE} skeleton={<CodeSkeleton />}>
+                <CodeTab
+                  scripts={state.bioinformatics}
+                  loading={state.agents.bioinformatics?.state === "running"}
+                  errored={codeErrored}
+                  onRetry={retry}
+                />
+              </SkeletonWrapper>
             ) : tab === "BUDGET" ? (
-              <BudgetTab
-                data={state.budget}
-                loading={state.agents.reagents?.state === "running"}
-                onRetry={retry}
-              />
+              <SkeletonWrapper isLoading={loading.BUDGET} skeleton={<BudgetSkeleton />}>
+                <BudgetTab
+                  data={state.budget}
+                  loading={state.agents.reagents?.state === "running"}
+                  onRetry={retry}
+                />
+              </SkeletonWrapper>
             ) : tab === "FUNDING" ? (
-              <FundingTab
-                data={state.funding}
-                loading={state.agents.funding?.state === "running"}
-                errored={fundingErrored}
-                onRetry={retry}
-              />
+              <SkeletonWrapper isLoading={loading.FUNDING} skeleton={<FundingSkeleton />}>
+                <FundingTab
+                  data={state.funding}
+                  loading={state.agents.funding?.state === "running"}
+                  errored={fundingErrored}
+                  onRetry={retry}
+                />
+              </SkeletonWrapper>
             ) : (
               <PlaceholderTab name={tab} />
             )}
