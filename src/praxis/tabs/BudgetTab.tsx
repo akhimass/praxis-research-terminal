@@ -136,7 +136,7 @@ export function BudgetTab({ data, loading, onRetry }: Props) {
 
   return (
     <div
-      className="flex flex-col w-full animate-praxis-fade"
+      className="flex flex-col w-full animate-praxis-fade overflow-y-auto praxis-scroll"
       style={{ background: "#000000", height: "100%", minHeight: 480 }}
     >
       {unmatched.length > 0 && (
