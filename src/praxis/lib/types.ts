@@ -66,6 +66,9 @@ export interface TamarindData {
   confidence?: number;
   residues?: number;
   source?: string;
+  proteinName?: string;
+  mutationSites?: string[];   // e.g. ["D87N", "S83L"]
+  error?: string;
 }
 
 export type CodeLang = "python" | "r" | "shell";

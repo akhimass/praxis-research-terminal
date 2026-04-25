@@ -582,7 +582,48 @@ export function usePraxisPipeline() {
     });
 
     at((t += 800), () => {
-      dispatch({ type: "TAMARIND", data: { pdb: undefined, confidence: 0.87, residues: 875, source: "AlphaFold / Tamarind Bio" } });
+      // Initial: structural job complete metadata, PDB streaming next.
+      dispatch({
+        type: "TAMARIND",
+        data: {
+          pdb: undefined,
+          confidence: 0.874,
+          residues: 237,
+          source: "TAMARIND BIO · ALPHAFOLD",
+          proteinName: "GyrA · E. coli · D87N MUTANT",
+          mutationSites: ["D87N", "S83L"],
+        },
+      });
+      // Fetch a real public PDB so the 3Dmol viewer has something to render in the demo.
+      // 1KZN = DNA gyrase B fragment with novobiocin — small, fast to load, biologically relevant.
+      fetch("https://files.rcsb.org/download/1KZN.pdb")
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error("PDB fetch failed"))))
+        .then((pdb) => {
+          dispatch({
+            type: "TAMARIND",
+            data: {
+              pdb,
+              confidence: 0.874,
+              residues: 237,
+              source: "TAMARIND BIO · ALPHAFOLD",
+              proteinName: "GyrA · E. coli · D87N MUTANT",
+              mutationSites: ["D87N", "S83L"],
+            },
+          });
+        })
+        .catch(() => {
+          dispatch({
+            type: "TAMARIND",
+            data: {
+              confidence: 0.874,
+              residues: 237,
+              source: "TAMARIND BIO · ALPHAFOLD",
+              proteinName: "GyrA · E. coli · D87N MUTANT",
+              mutationSites: ["D87N", "S83L"],
+              error: "Protein not found in AlphaFold database",
+            },
+          });
+        });
     });
     at((t += 600), () => {
       dispatch({ type: "KEY_FINDING", text: "GyrA S83L confers 16× MIC shift; D87N adds 4× — combined haplotype dominates clinical isolates." });

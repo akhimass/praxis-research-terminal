@@ -56,7 +56,11 @@ export function Praxis() {
             {!anyData && state.status !== "RUNNING" ? (
               <EmptyState />
             ) : tab === "SCIENCE" ? (
-              <ScienceTab papers={state.papers} tamarind={state.tamarind} />
+              <ScienceTab
+                papers={state.papers}
+                tamarind={state.tamarind}
+                isStructureLoading={state.agents.bioinformatics?.state === "running"}
+              />
             ) : tab === "PROTOCOL" ? (
               <ProtocolTab steps={state.protocol} />
             ) : tab === "RISKS" ? (
