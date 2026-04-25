@@ -4,6 +4,7 @@ import {
   AGENTS,
   AgentRecord,
   AuditFlag,
+  CodeScript,
   GlobalStatus,
   Paper,
   ProtocolStep,
@@ -21,7 +22,7 @@ interface State {
   timeline: any | null;
   funding: any | null;
   gtm: any | null;
-  bioinformatics: any | null;
+  bioinformatics: CodeScript[];
   tamarind: TamarindData | null;
   audit: AuditFlag[];
   keyFinding: string | null;
@@ -44,7 +45,7 @@ const initialState: State = {
   timeline: null,
   funding: null,
   gtm: null,
-  bioinformatics: null,
+  bioinformatics: [],
   tamarind: null,
   audit: [],
   keyFinding: null,
@@ -65,7 +66,7 @@ type Action =
   | { type: "TIMELINE"; data: any }
   | { type: "FUNDING"; data: any }
   | { type: "GTM"; data: any }
-  | { type: "BIOINFORMATICS"; data: any }
+  | { type: "BIOINFORMATICS"; data: CodeScript[] }
   | { type: "TAMARIND"; data: TamarindData }
   | { type: "AUDIT"; flags: AuditFlag[] }
   | { type: "KEY_FINDING"; text: string }
@@ -113,7 +114,7 @@ function reducer(state: State, action: Action): State {
     case "GTM":
       return { ...state, gtm: action.data };
     case "BIOINFORMATICS":
-      return { ...state, bioinformatics: action.data, hasData: { ...state.hasData, code: true } };
+      return { ...state, bioinformatics: action.data, hasData: { ...state.hasData, code: action.data.length > 0 } };
     case "TAMARIND":
       return { ...state, tamarind: action.data, hasData: { ...state.hasData, science: true } };
     case "AUDIT":
@@ -168,7 +169,12 @@ export function usePraxisPipeline() {
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
       if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
-      if (agent === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: payload });
+      if (agent === "bioinformatics") {
+        const scripts: CodeScript[] = Array.isArray(payload?.scripts)
+          ? payload.scripts
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "BIOINFORMATICS", data: scripts });
+      }
       return;
     }
     if (evt === "tamarind")    dispatch({ type: "TAMARIND", data: payload });
