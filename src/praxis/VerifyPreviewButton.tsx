@@ -54,9 +54,9 @@ export function VerifyPreviewButton() {
           zIndex: 9999,
           height: 32,
           padding: "0 14px",
-          background: "#0a1628",
-          border: "1px solid #4d9fff66",
-          color: "#4d9fff",
+          background: "#0a0a0a",
+          border: "1px solid #fafafa66",
+          color: "#fafafa",
           fontSize: 10,
           letterSpacing: "0.2em",
           cursor: "pointer",
@@ -73,21 +73,21 @@ export function VerifyPreviewButton() {
             right: 16,
             zIndex: 9999,
             width: 360,
-            background: "#0a1628",
-            border: "1px solid #1a2f50",
+            background: "#0a0a0a",
+            border: "1px solid #262626",
             padding: 14,
-            color: "#e2eaf5",
+            color: "#fafafa",
             fontSize: 10,
             lineHeight: 1.7,
           }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span style={{ color: "#4d9fff", letterSpacing: "0.2em", fontWeight: 800 }}>
+            <span style={{ color: "#fafafa", letterSpacing: "0.2em", fontWeight: 800 }}>
               ◈ RENDER REPORT
             </span>
             <button
               onClick={() => setOpen(false)}
-              style={{ color: "#5a7a9a", background: "transparent", border: "none", cursor: "pointer" }}
+              style={{ color: "#a1a1a1", background: "transparent", border: "none", cursor: "pointer" }}
             >
               ✕
             </button>
@@ -103,8 +103,8 @@ export function VerifyPreviewButton() {
           <div
             className="mt-3 pt-2"
             style={{
-              borderTop: "1px solid #1a2f50",
-              color: report.praxisMounted ? "#00d97e" : "#f0a500",
+              borderTop: "1px solid #262626",
+              color: report.praxisMounted ? "#fafafa" : "#a1a1a1",
               letterSpacing: "0.15em",
               fontWeight: 700,
             }}
@@ -122,10 +122,10 @@ export function VerifyPreviewButton() {
 function Row({ k, v, ok }: { k: string; v: string; ok?: boolean }) {
   return (
     <div className="flex justify-between gap-3">
-      <span style={{ color: "#5a7a9a", letterSpacing: "0.15em" }}>{k}</span>
+      <span style={{ color: "#a1a1a1", letterSpacing: "0.15em" }}>{k}</span>
       <span
         style={{
-          color: ok === undefined ? "#e2eaf5" : ok ? "#00d97e" : "#f0a500",
+          color: ok === undefined ? "#fafafa" : ok ? "#fafafa" : "#a1a1a1",
           textAlign: "right",
           maxWidth: 220,
           overflow: "hidden",

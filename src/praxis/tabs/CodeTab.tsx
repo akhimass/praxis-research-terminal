@@ -38,9 +38,9 @@ function loadHljs(): Promise<any> {
 /* ---------- design tokens ---------- */
 
 const LANG_COLOR: Record<CodeLang, string> = {
-  python: "#4d9fff",
-  r:      "#9d6fff",
-  shell:  "#f0a500",
+  python: "#fafafa",
+  r:      "#fafafa",
+  shell:  "#a1a1a1",
 };
 const LANG_LABEL: Record<CodeLang, string> = {
   python: "PYTHON",
@@ -65,25 +65,25 @@ const PRAXIS_HLJS_CSS = `
 .praxis-code .hljs-selector-tag,
 .praxis-code .hljs-literal,
 .praxis-code .hljs-section,
-.praxis-code .hljs-link        { color: #9d6fff; }
+.praxis-code .hljs-link        { color: #fafafa; }
 .praxis-code .hljs-string,
 .praxis-code .hljs-attr,
 .praxis-code .hljs-symbol,
-.praxis-code .hljs-bullet      { color: #00d97e; }
+.praxis-code .hljs-bullet      { color: #fafafa; }
 .praxis-code .hljs-comment,
 .praxis-code .hljs-quote,
-.praxis-code .hljs-meta        { color: #2a4060; font-style: italic; }
+.praxis-code .hljs-meta        { color: #404040; font-style: italic; }
 .praxis-code .hljs-number,
-.praxis-code .hljs-regexp      { color: #f0a500; }
+.praxis-code .hljs-regexp      { color: #a1a1a1; }
 .praxis-code .hljs-title,
 .praxis-code .hljs-name,
 .praxis-code .hljs-title.function_,
-.praxis-code .hljs-built_in    { color: #4d9fff; }
+.praxis-code .hljs-built_in    { color: #fafafa; }
 .praxis-code .hljs-type,
 .praxis-code .hljs-class .hljs-title,
 .praxis-code .hljs-builtin-name { color: #ff4d4d; }
 .praxis-code .hljs-operator,
-.praxis-code .hljs-punctuation { color: #e2eaf5; }
+.praxis-code .hljs-punctuation { color: #fafafa; }
 `;
 
 function PraxisHljsStyle() {
@@ -99,13 +99,13 @@ function escapeHtml(s: string): string {
 function EmptyState() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center font-mono">
-      <div style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.2em" }}>
+      <div style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em" }}>
         BIOINFORMATICS AGENT PENDING
       </div>
-      <div className="my-6" style={{ fontSize: 32, color: "#5a7a9a", lineHeight: 1, animation: "praxis-blink 1s steps(2) infinite" }}>
+      <div className="my-6" style={{ fontSize: 32, color: "#a1a1a1", lineHeight: 1, animation: "praxis-blink 1s steps(2) infinite" }}>
         _
       </div>
-      <div style={{ fontSize: 10, color: "#2a4060", maxWidth: 380, textAlign: "center", lineHeight: 1.6 }}>
+      <div style={{ fontSize: 10, color: "#404040", maxWidth: 380, textAlign: "center", lineHeight: 1.6 }}>
         Generated Python and R analysis scripts will appear here as the
         bioinformatics agent completes synthesis.
       </div>
@@ -144,16 +144,16 @@ function LoadingState() {
   const lines = visible.split("\n");
   return (
     <div className="flex-1 flex">
-      <div style={{ width: 48, background: "#050a14", borderRight: "1px solid #1a2f50", padding: "12px 8px 12px 0" }}>
+      <div style={{ width: 48, background: "#000000", borderRight: "1px solid #262626", padding: "12px 8px 12px 0" }}>
         {Array.from({ length: PLACEHOLDER_LINES.length }).map((_, i) => (
-          <div key={i} className="font-mono text-right" style={{ fontSize: 10, color: "#1a2f50", lineHeight: 1.7 }}>
+          <div key={i} className="font-mono text-right" style={{ fontSize: 10, color: "#262626", lineHeight: 1.7 }}>
             {String(i + 1).padStart(2, "0")}
           </div>
         ))}
       </div>
-      <pre className="font-mono flex-1 m-0 px-4 py-3" style={{ fontSize: 11, color: "#1a2f50", lineHeight: 1.7, whiteSpace: "pre" }}>
+      <pre className="font-mono flex-1 m-0 px-4 py-3" style={{ fontSize: 11, color: "#262626", lineHeight: 1.7, whiteSpace: "pre" }}>
         {lines.join("\n")}
-        <span style={{ color: "#5a7a9a", animation: "praxis-blink 1s steps(2) infinite" }}>▌</span>
+        <span style={{ color: "#a1a1a1", animation: "praxis-blink 1s steps(2) infinite" }}>▌</span>
       </pre>
       <style>{`@keyframes praxis-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }`}</style>
     </div>
@@ -164,7 +164,7 @@ function LoadingState() {
 
 function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; active: number; onSelect: (i: number) => void }) {
   return (
-    <div className="flex items-stretch shrink-0" style={{ background: "#050a14", borderBottom: "1px solid #1a2f50" }}>
+    <div className="flex items-stretch shrink-0" style={{ background: "#000000", borderBottom: "1px solid #262626" }}>
       {scripts.map((s, i) => {
         const isActive = i === active;
         const color = LANG_COLOR[s.language];
@@ -179,8 +179,8 @@ function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; acti
               height: 28,
               padding: "0 14px",
               fontSize: 10,
-              background: isActive ? "#0d1e35" : "transparent",
-              color: isActive ? "#e2eaf5" : "#2a4060",
+              background: isActive ? "#111111" : "transparent",
+              color: isActive ? "#fafafa" : "#404040",
               borderBottom: isActive ? `2px solid ${color}` : "2px solid transparent",
               cursor: "pointer",
               letterSpacing: "0.05em",
@@ -188,7 +188,7 @@ function FileTabBar({ scripts, active, onSelect }: { scripts: CodeScript[]; acti
           >
             <span style={{ display: "inline-block", width: 6, height: 6, background: color, boxShadow: isActive ? `0 0 6px ${color}` : "none" }} />
             <span>{s.name}</span>
-            <span style={{ color: "#2a4060", marginLeft: 4 }}>{sizeKb}K</span>
+            <span style={{ color: "#404040", marginLeft: 4 }}>{sizeKb}K</span>
           </button>
         );
       })}
@@ -233,18 +233,18 @@ function CodePanel({ script }: { script: CodeScript }) {
   }, [lines, hljs, lang]);
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden" style={{ background: "#08101f" }}>
+    <div className="flex flex-1 min-h-0 overflow-hidden" style={{ background: "#050505" }}>
       <PraxisHljsStyle />
       {/* Line numbers */}
       <div
         className="shrink-0 select-none praxis-scroll overflow-y-hidden"
-        style={{ width: 48, background: "#050a14", borderRight: "1px solid #1a2f50", padding: "12px 8px 12px 0" }}
+        style={{ width: 48, background: "#000000", borderRight: "1px solid #262626", padding: "12px 8px 12px 0" }}
       >
         {renderedLines.map((_, i) => (
           <div
             key={i}
             className="font-mono text-right"
-            style={{ fontSize: 10, lineHeight: 1.7, color: hoverLine === i ? "#5a7a9a" : "#2a4060" }}
+            style={{ fontSize: 10, lineHeight: 1.7, color: hoverLine === i ? "#a1a1a1" : "#404040" }}
           >
             {String(i + 1).padStart(2, "0")}
           </div>
@@ -259,7 +259,7 @@ function CodePanel({ script }: { script: CodeScript }) {
             padding: "0 16px",
             whiteSpace: "pre",
             fontFamily: '"IBM Plex Mono", monospace',
-            background: hoverLine === i ? "#0d1e3520" : "transparent",
+            background: hoverLine === i ? "#11111120" : "transparent",
             transition: "background 100ms ease",
           };
           if (l.kind === "user") {
@@ -270,10 +270,10 @@ function CodePanel({ script }: { script: CodeScript }) {
                 onMouseLeave={() => setHoverLine(null)}
                 style={{
                   ...baseStyle,
-                  background: hoverLine === i ? "#f0a50022" : "#f0a50015",
-                  borderLeft: "2px solid #f0a500",
+                  background: hoverLine === i ? "#a1a1a122" : "#a1a1a115",
+                  borderLeft: "2px solid #a1a1a1",
                   paddingLeft: 14,
-                  color: "#f0a500",
+                  color: "#a1a1a1",
                 }}
               >
                 {l.text || "\u00a0"}
@@ -286,7 +286,7 @@ function CodePanel({ script }: { script: CodeScript }) {
                 key={i}
                 onMouseEnter={() => setHoverLine(i)}
                 onMouseLeave={() => setHoverLine(null)}
-                style={{ ...baseStyle, color: "#00d97e", fontStyle: "italic" }}
+                style={{ ...baseStyle, color: "#fafafa", fontStyle: "italic" }}
               >
                 {l.text || "\u00a0"}
               </div>
@@ -341,10 +341,10 @@ function MetaPanel({ script }: { script: CodeScript }) {
   return (
     <aside
       className="shrink-0 flex flex-col overflow-y-auto praxis-scroll"
-      style={{ width: "25%", minWidth: 240, background: "#0a1628", borderLeft: "1px solid #1a2f50", padding: 16 }}
+      style={{ width: "25%", minWidth: 240, background: "#0a0a0a", borderLeft: "1px solid #262626", padding: 16 }}
     >
       {/* TOP */}
-      <div className="font-mono font-bold" style={{ fontSize: 13, color: "#e2eaf5", wordBreak: "break-all" }}>
+      <div className="font-mono font-bold" style={{ fontSize: 13, color: "#fafafa", wordBreak: "break-all" }}>
         {script.name}
       </div>
       <div className="mt-2">
@@ -355,26 +355,26 @@ function MetaPanel({ script }: { script: CodeScript }) {
           {LANG_LABEL[script.language]}
         </span>
       </div>
-      <div className="font-mono mt-3" style={{ fontSize: 11, color: "#5a7a9a", lineHeight: 1.6 }}>
+      <div className="font-mono mt-3" style={{ fontSize: 11, color: "#a1a1a1", lineHeight: 1.6 }}>
         {script.purpose}
       </div>
-      <div className="font-mono mt-3 flex justify-between" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.15em" }}>
+      <div className="font-mono mt-3 flex justify-between" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.15em" }}>
         <span>{lineCount} LINES</span>
         <span>{(script.code.length / 1024).toFixed(1)}K</span>
       </div>
-      <div className="font-mono mt-1" style={{ fontSize: 9, color: "#2a4060" }}>
+      <div className="font-mono mt-1" style={{ fontSize: 9, color: "#404040" }}>
         GENERATED BY · {script.generatedBy ?? "PRAXIS Bioinformatics Agent"}
       </div>
 
       {/* MIDDLE */}
       {script.requires && script.requires.length > 0 && (
-        <div className="mt-5 pt-4" style={{ borderTop: "1px solid #1a2f50" }}>
-          <div className="font-mono mb-2" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.2em" }}>
+        <div className="mt-5 pt-4" style={{ borderTop: "1px solid #262626" }}>
+          <div className="font-mono mb-2" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em" }}>
             REQUIRES
           </div>
           <div className="flex flex-wrap gap-1">
             {script.requires.map((r) => {
-              const dot = r.standard ? "#00d97e" : "#f0a500";
+              const dot = r.standard ? "#fafafa" : "#a1a1a1";
               const installer = script.language === "r" ? `install.packages("${r.name}")` : `pip install ${r.name}`;
               return (
                 <span
@@ -383,9 +383,9 @@ function MetaPanel({ script }: { script: CodeScript }) {
                   className="font-mono inline-flex items-center gap-1.5"
                   style={{
                     fontSize: 10,
-                    background: "#0d1e35",
-                    border: "1px solid #1a2f50",
-                    color: "#e2eaf5",
+                    background: "#111111",
+                    border: "1px solid #262626",
+                    color: "#fafafa",
                     padding: "3px 8px",
                     cursor: r.standard ? "default" : "help",
                   }}
@@ -400,7 +400,7 @@ function MetaPanel({ script }: { script: CodeScript }) {
       )}
 
       {/* BOTTOM */}
-      <div className="mt-5 pt-4 flex flex-col gap-2" style={{ borderTop: "1px solid #1a2f50" }}>
+      <div className="mt-5 pt-4 flex flex-col gap-2" style={{ borderTop: "1px solid #262626" }}>
         <button
           type="button"
           onClick={onCopy}
@@ -408,8 +408,8 @@ function MetaPanel({ script }: { script: CodeScript }) {
           style={{
             height: 32,
             background: "transparent",
-            border: "1px solid #00d97e44",
-            color: "#00d97e",
+            border: "1px solid #fafafa44",
+            color: "#fafafa",
             fontSize: 10,
             letterSpacing: "0.15em",
             cursor: "pointer",
@@ -423,7 +423,7 @@ function MetaPanel({ script }: { script: CodeScript }) {
           className="font-mono font-extrabold transition-all duration-150"
           style={{
             height: 32,
-            background: "#00d97e",
+            background: "#fafafa",
             color: "#000",
             fontSize: 10,
             letterSpacing: "0.15em",
@@ -442,8 +442,8 @@ function MetaPanel({ script }: { script: CodeScript }) {
           style={{
             height: 32,
             background: "transparent",
-            border: "1px solid #4d9fff44",
-            color: "#4d9fff",
+            border: "1px solid #fafafa44",
+            color: "#fafafa",
             fontSize: 10,
             letterSpacing: "0.15em",
             textDecoration: "none",
@@ -476,7 +476,7 @@ export function CodeTab({ scripts, loading }: Props) {
   return (
     <div
       className="flex flex-col w-full animate-praxis-fade"
-      style={{ background: "#050a14", height: "100%", minHeight: 480 }}
+      style={{ background: "#000000", height: "100%", minHeight: 480 }}
     >
       {scripts.length > 0 && (
         <FileTabBar scripts={scripts} active={active} onSelect={setActive} />
@@ -495,9 +495,9 @@ export function CodeTab({ scripts, loading }: Props) {
 
       <div
         className="shrink-0 flex items-center px-4"
-        style={{ height: 24, background: "#050a14", borderTop: "1px solid #1a2f50" }}
+        style={{ height: 24, background: "#000000", borderTop: "1px solid #262626" }}
       >
-        <span className="font-mono" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.15em" }}>
+        <span className="font-mono" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.15em" }}>
           PRAXIS BIOINFORMATICS ENGINE · {scripts.length} SCRIPTS GENERATED · {scripts.length > 0 ? "READY TO EXECUTE" : "AWAITING SYNTHESIS"}
         </span>
       </div>

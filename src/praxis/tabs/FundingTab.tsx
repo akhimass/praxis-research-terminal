@@ -4,14 +4,14 @@ import { FundingData, FundingGrant, GrantType } from "../lib/types";
 /* -------- formatting + color helpers -------- */
 
 function fitColor(fit: number): string {
-  if (fit >= 90) return "#00d97e";
-  if (fit >= 70) return "#f0a500";
-  if (fit >= 50) return "#4d9fff";
-  return "#2a4060";
+  if (fit >= 90) return "#fafafa";
+  if (fit >= 70) return "#a1a1a1";
+  if (fit >= 50) return "#fafafa";
+  return "#404040";
 }
 function barColor(score: number): string {
-  if (score >= 70) return "#00d97e";
-  if (score >= 50) return "#f0a500";
+  if (score >= 70) return "#fafafa";
+  if (score >= 50) return "#a1a1a1";
   return "#ff4d4d";
 }
 function fmtAmount(n: number): string {
@@ -29,12 +29,12 @@ function daysUntil(iso?: string): number | null {
   return Math.ceil((d - Date.now()) / 86400000);
 }
 function deadlineColor(g: FundingGrant): string {
-  if (g.deadline === "ROLLING") return "#00d97e";
+  if (g.deadline === "ROLLING") return "#fafafa";
   const dd = daysUntil(g.deadlineDate);
-  if (dd === null) return "#5a7a9a";
+  if (dd === null) return "#a1a1a1";
   if (dd < 30) return "#ff4d4d";
-  if (dd < 90) return "#f0a500";
-  return "#e2eaf5";
+  if (dd < 90) return "#a1a1a1";
+  return "#fafafa";
 }
 function deadlineLabel(g: FundingGrant): string {
   if (g.deadline === "ROLLING") return "ROLLING";
@@ -50,9 +50,9 @@ function deadlineSubLabel(g: FundingGrant): string {
 }
 
 const TYPE_COLOR: Record<GrantType, string> = {
-  FEDERAL: "#4d9fff",
-  PRIVATE: "#9d6fff",
-  ACADEMIC: "#00d97e",
+  FEDERAL: "#fafafa",
+  PRIVATE: "#fafafa",
+  ACADEMIC: "#fafafa",
 };
 
 function highlightTerms(text: string): React.ReactNode[] {
@@ -60,7 +60,7 @@ function highlightTerms(text: string): React.ReactNode[] {
   const parts = text.split(/(\{\{[^}]+\}\})/g);
   return parts.map((p, i) => {
     const m = /^\{\{(.+)\}\}$/.exec(p);
-    if (m) return <span key={i} style={{ color: "#f0a500", fontStyle: "normal" }}>{m[1]}</span>;
+    if (m) return <span key={i} style={{ color: "#a1a1a1", fontStyle: "normal" }}>{m[1]}</span>;
     return <span key={i}>{p}</span>;
   });
 }
@@ -85,7 +85,7 @@ export function FundingTab({ data, loading }: Props) {
   if (grants.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ minHeight: 320 }}>
-        <div className="font-mono animate-praxis-dots" style={{ fontSize: 11, color: "#5a7a9a", letterSpacing: "0.2em" }}>
+        <div className="font-mono animate-praxis-dots" style={{ fontSize: 11, color: "#a1a1a1", letterSpacing: "0.2em" }}>
           {loading ? "FUNDING AGENT RUNNING···" : "FUNDING AGENT PENDING···"}
         </div>
       </div>
@@ -96,7 +96,7 @@ export function FundingTab({ data, loading }: Props) {
   const top = grants[0];
 
   return (
-    <div className="flex flex-col w-full animate-praxis-fade" style={{ background: "#050a14", height: "100%", minHeight: 480 }}>
+    <div className="flex flex-col w-full animate-praxis-fade" style={{ background: "#000000", height: "100%", minHeight: 480 }}>
       <SummaryStrip count={grants.length} totalAddressable={totalAddressable} top={top} />
       <div className="flex flex-1 min-h-0">
         <GrantList grants={grants} selectedId={selectedId} onSelect={setSelectedId} />
@@ -112,27 +112,27 @@ function SummaryStrip({ count, totalAddressable, top }: { count: number; totalAd
   return (
     <div
       className="shrink-0 flex items-center gap-4 font-mono"
-      style={{ height: 48, background: "#0a1628", borderBottom: "1px solid #1a2f50", padding: "0 20px", fontSize: 10, color: "#5a7a9a", letterSpacing: "0.1em" }}
+      style={{ height: 48, background: "#0a0a0a", borderBottom: "1px solid #262626", padding: "0 20px", fontSize: 10, color: "#a1a1a1", letterSpacing: "0.1em" }}
     >
-      <span>OPPORTUNITIES FOUND · <span style={{ color: "#e2eaf5" }}>{count}</span></span>
+      <span>OPPORTUNITIES FOUND · <span style={{ color: "#fafafa" }}>{count}</span></span>
       <Sep />
-      <span>TOTAL ADDRESSABLE · <span style={{ color: "#00d97e" }}>{fmtAmount(totalAddressable)}</span></span>
+      <span>TOTAL ADDRESSABLE · <span style={{ color: "#fafafa" }}>{fmtAmount(totalAddressable)}</span></span>
       <Sep />
       <span>
-        TOP FIT · <span style={{ color: "#e2eaf5" }}>{top.organization}</span>{" "}
+        TOP FIT · <span style={{ color: "#fafafa" }}>{top.organization}</span>{" "}
         <span style={{ color: fitColor(top.fit) }}>{top.fit}%</span>
       </span>
     </div>
   );
 }
-function Sep() { return <div style={{ width: 1, height: 16, background: "#1a2f50" }} />; }
+function Sep() { return <div style={{ width: 1, height: 16, background: "#262626" }} />; }
 
 /* -------- left grant list -------- */
 
 function GrantList({ grants, selectedId, onSelect }: { grants: FundingGrant[]; selectedId: string | null; onSelect: (id: string) => void }) {
   return (
-    <aside className="shrink-0 flex flex-col" style={{ width: 300, background: "#08101f", borderRight: "1px solid #1a2f50" }}>
-      <div className="font-mono shrink-0" style={{ padding: "12px 14px", fontSize: 9, color: "#2a4060", letterSpacing: "0.2em", borderBottom: "1px solid #1a2f50" }}>
+    <aside className="shrink-0 flex flex-col" style={{ width: 300, background: "#050505", borderRight: "1px solid #262626" }}>
+      <div className="font-mono shrink-0" style={{ padding: "12px 14px", fontSize: 9, color: "#404040", letterSpacing: "0.2em", borderBottom: "1px solid #262626" }}>
         OPPORTUNITIES
       </div>
       <div className="flex-1 overflow-y-auto praxis-scroll">
@@ -154,8 +154,8 @@ function GrantRow({ grant, selected, onSelect }: { grant: FundingGrant; selected
       className="w-full text-left transition-all duration-150"
       style={{
         display: "flex", gap: 10, alignItems: "stretch",
-        background: selected || hover ? "#0d1e35" : "transparent",
-        borderBottom: "1px solid #0d1e35",
+        background: selected || hover ? "#111111" : "transparent",
+        borderBottom: "1px solid #111111",
         borderLeft: `3px solid ${fc}`,
         filter: selected ? "brightness(1.15)" : "none",
         padding: "12px 14px",
@@ -163,10 +163,10 @@ function GrantRow({ grant, selected, onSelect }: { grant: FundingGrant; selected
       }}
     >
       <div className="flex-1 min-w-0">
-        <div className="font-mono font-bold truncate" style={{ fontSize: 11, color: "#e2eaf5" }} title={grant.name}>
+        <div className="font-mono font-bold truncate" style={{ fontSize: 11, color: "#fafafa" }} title={grant.name}>
           {grant.name}
         </div>
-        <div className="font-mono mt-1" style={{ fontSize: 10, color: "#5a7a9a" }}>
+        <div className="font-mono mt-1" style={{ fontSize: 10, color: "#a1a1a1" }}>
           {grant.organization} · {amountRange(grant)}
         </div>
         <div className="font-mono mt-1 inline-flex items-center gap-1.5" style={{ fontSize: 8, color: deadlineColor(grant), letterSpacing: "0.15em" }}>
@@ -175,7 +175,7 @@ function GrantRow({ grant, selected, onSelect }: { grant: FundingGrant; selected
         </div>
       </div>
       <div className="flex flex-col items-center justify-center gap-1 shrink-0" style={{ width: 26 }}>
-        <div style={{ width: 4, height: 40, background: "#1a2f50", position: "relative" }}>
+        <div style={{ width: 4, height: 40, background: "#262626", position: "relative" }}>
           <div style={{ position: "absolute", bottom: 0, left: 0, width: 4, height: `${grant.fit}%`, background: fc, boxShadow: `0 0 6px ${fc}88`, transition: "height 200ms ease" }} />
         </div>
         <span className="font-mono font-bold" style={{ fontSize: 9, color: fc }}>{(grant.fit / 10).toFixed(1)}</span>
@@ -191,9 +191,9 @@ function GrantRow({ grant, selected, onSelect }: { grant: FundingGrant; selected
 
 function NoSelection() {
   return (
-    <main className="flex-1 flex flex-col items-center justify-center font-mono" style={{ background: "#050a14" }}>
-      <div style={{ fontSize: 14, color: "#5a7a9a", letterSpacing: "0.2em" }}>← SELECT OPPORTUNITY</div>
-      <div className="mt-3" style={{ fontSize: 10, color: "#2a4060", maxWidth: 360, textAlign: "center", lineHeight: 1.7, letterSpacing: "0.1em" }}>
+    <main className="flex-1 flex flex-col items-center justify-center font-mono" style={{ background: "#000000" }}>
+      <div style={{ fontSize: 14, color: "#a1a1a1", letterSpacing: "0.2em" }}>← SELECT OPPORTUNITY</div>
+      <div className="mt-3" style={{ fontSize: 10, color: "#404040", maxWidth: 360, textAlign: "center", lineHeight: 1.7, letterSpacing: "0.1em" }}>
         Detailed fit analysis, requirement checklist, and one-click specific-aims drafting will appear here.
       </div>
     </main>
@@ -247,11 +247,11 @@ function DeepDive({ grant }: { grant: FundingGrant }) {
 function Identity({ grant }: { grant: FundingGrant }) {
   const fc = fitColor(grant.fit);
   return (
-    <div style={{ padding: 20, borderBottom: "1px solid #1a2f50" }}>
-      <div className="font-mono font-extrabold" style={{ fontSize: 20, color: "#e2eaf5", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+    <div style={{ padding: 20, borderBottom: "1px solid #262626" }}>
+      <div className="font-mono font-extrabold" style={{ fontSize: 20, color: "#fafafa", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
         {grant.name}
       </div>
-      <div className="font-mono mt-1" style={{ fontSize: 12, color: "#4d9fff" }}>
+      <div className="font-mono mt-1" style={{ fontSize: 12, color: "#fafafa" }}>
         {grant.organization}
       </div>
       <div className="mt-5 flex items-center gap-4 flex-wrap">
@@ -270,7 +270,7 @@ function FitDial({ fit, color }: { fit: number; color: string }) {
   return (
     <div className="flex flex-col items-center" style={{ width: 80 }}>
       <svg width={60} height={60} viewBox="0 0 60 60" style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={30} cy={30} r={r} fill="none" stroke="#1a2f50" strokeWidth={4} />
+        <circle cx={30} cy={30} r={r} fill="none" stroke="#262626" strokeWidth={4} />
         <circle
           cx={30} cy={30} r={r}
           fill="none" stroke={color} strokeWidth={4}
@@ -283,7 +283,7 @@ function FitDial({ fit, color }: { fit: number; color: string }) {
           {(fit / 10).toFixed(1)}
         </text>
       </svg>
-      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.2em" }}>FIT SCORE</div>
+      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.2em" }}>FIT SCORE</div>
     </div>
   );
 }
@@ -291,15 +291,15 @@ function FitDial({ fit, color }: { fit: number; color: string }) {
 function AmountTile({ grant }: { grant: FundingGrant }) {
   return (
     <div className="flex flex-col" style={{ minWidth: 160 }}>
-      <div className="font-mono font-bold" style={{ fontSize: 18, color: "#00d97e", letterSpacing: "-0.01em" }}>
+      <div className="font-mono font-bold" style={{ fontSize: 18, color: "#fafafa", letterSpacing: "-0.01em" }}>
         {amountRange(grant)}
       </div>
       {grant.followOn && (
-        <div className="font-mono mt-0.5" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
+        <div className="font-mono mt-0.5" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
           + {fmtAmount(grant.followOn)} FOLLOW-ON
         </div>
       )}
-      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.2em" }}>AMOUNT</div>
+      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.2em" }}>AMOUNT</div>
     </div>
   );
 }
@@ -310,10 +310,10 @@ function DeadlineTile({ grant }: { grant: FundingGrant }) {
       <div className="font-mono font-bold" style={{ fontSize: 14, color: deadlineColor(grant), letterSpacing: "0.1em" }}>
         {deadlineLabel(grant)}
       </div>
-      <div className="font-mono mt-0.5" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.1em" }}>
+      <div className="font-mono mt-0.5" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
         {deadlineSubLabel(grant)}
       </div>
-      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.2em" }}>DEADLINE</div>
+      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.2em" }}>DEADLINE</div>
     </div>
   );
 }
@@ -328,7 +328,7 @@ function TypeTile({ type }: { type: GrantType }) {
       >
         {type}
       </span>
-      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#2a4060", letterSpacing: "0.2em" }}>TYPE</div>
+      <div className="font-mono mt-1" style={{ fontSize: 8, color: "#404040", letterSpacing: "0.2em" }}>TYPE</div>
     </div>
   );
 }
@@ -344,7 +344,7 @@ function FitAnalysis({ grant }: { grant: FundingGrant }) {
         ))}
       </div>
 
-      <div className="font-mono mt-5" style={{ fontSize: 11, color: "#5a7a9a", fontStyle: "italic", lineHeight: 1.7 }}>
+      <div className="font-mono mt-5" style={{ fontSize: 11, color: "#a1a1a1", fontStyle: "italic", lineHeight: 1.7 }}>
         {highlightTerms(grant.rationale)}
       </div>
 
@@ -352,14 +352,14 @@ function FitAnalysis({ grant }: { grant: FundingGrant }) {
         <SectionHeader>REQUIREMENTS</SectionHeader>
         <div className="flex flex-col mt-3">
           {grant.requirements.map((r, i) => (
-            <div key={i} className="flex items-start gap-3 font-mono" style={{ padding: "8px 0", borderBottom: i < grant.requirements.length - 1 ? "1px solid #0d1e35" : "none", fontSize: 11 }}>
-              <span style={{ color: r.met ? "#00d97e" : "#ff4d4d", fontWeight: 700, width: 14, textAlign: "center" }}>
+            <div key={i} className="flex items-start gap-3 font-mono" style={{ padding: "8px 0", borderBottom: i < grant.requirements.length - 1 ? "1px solid #111111" : "none", fontSize: 11 }}>
+              <span style={{ color: r.met ? "#fafafa" : "#ff4d4d", fontWeight: 700, width: 14, textAlign: "center" }}>
                 {r.met ? "✓" : "×"}
               </span>
               <div className="flex-1">
-                <div style={{ color: r.met ? "#5a7a9a" : "#e2eaf5" }}>{r.text}</div>
+                <div style={{ color: r.met ? "#a1a1a1" : "#fafafa" }}>{r.text}</div>
                 {!r.met && r.satisfyHint && (
-                  <div style={{ fontSize: 10, color: "#f0a500", marginTop: 2, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 10, color: "#a1a1a1", marginTop: 2, lineHeight: 1.5 }}>
                     → {r.satisfyHint}
                   </div>
                 )}
@@ -373,15 +373,15 @@ function FitAnalysis({ grant }: { grant: FundingGrant }) {
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
-  return <div className="font-mono uppercase" style={{ fontSize: 9, color: "#2a4060", letterSpacing: "0.2em" }}>{children}</div>;
+  return <div className="font-mono uppercase" style={{ fontSize: 9, color: "#404040", letterSpacing: "0.2em" }}>{children}</div>;
 }
 
 function FitBar({ label, score }: { label: string; score: number }) {
   const c = barColor(score);
   return (
     <div className="flex items-center gap-3 font-mono" style={{ fontSize: 10 }}>
-      <span style={{ color: "#5a7a9a", width: 180, letterSpacing: "0.1em" }}>{label}</span>
-      <div style={{ width: 120, height: 6, background: "#1a2f50", flexShrink: 0 }}>
+      <span style={{ color: "#a1a1a1", width: 180, letterSpacing: "0.1em" }}>{label}</span>
+      <div style={{ width: 120, height: 6, background: "#262626", flexShrink: 0 }}>
         <div style={{ width: `${score}%`, height: 6, background: c, transition: "width 250ms ease" }} />
       </div>
       <span style={{ color: c, fontWeight: 600, width: 36, textAlign: "right" }}>{score}%</span>
@@ -396,14 +396,14 @@ function Actions({
   grant: FundingGrant; generating: boolean; onGenerate: () => void; saved: boolean; onSave: () => void;
 }) {
   return (
-    <div className="shrink-0 flex gap-2" style={{ padding: 16, borderTop: "1px solid #1a2f50", background: "#050a14" }}>
+    <div className="shrink-0 flex gap-2" style={{ padding: 16, borderTop: "1px solid #262626", background: "#000000" }}>
       <button
         type="button"
         onClick={onGenerate}
         disabled={generating}
         className="flex-1 font-mono font-extrabold transition-all duration-150"
         style={{
-          height: 36, background: "#00d97e", color: "#000", fontSize: 11,
+          height: 36, background: "#fafafa", color: "#000", fontSize: 11,
           letterSpacing: "0.15em", cursor: generating ? "wait" : "pointer",
           filter: generating ? "brightness(0.85)" : "none",
         }}
@@ -417,9 +417,9 @@ function Actions({
         target="_blank"
         rel="noreferrer"
         className="font-mono font-bold inline-flex items-center justify-center transition-all duration-150"
-        style={{ height: 36, padding: "0 16px", background: "transparent", border: "1px solid #1a2f50", color: "#5a7a9a", fontSize: 10, letterSpacing: "0.15em", textDecoration: "none" }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "#e2eaf5")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "#5a7a9a")}
+        style={{ height: 36, padding: "0 16px", background: "transparent", border: "1px solid #262626", color: "#a1a1a1", fontSize: 10, letterSpacing: "0.15em", textDecoration: "none" }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "#fafafa")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "#a1a1a1")}
       >
         VIEW REQUIREMENTS ↗
       </a>
@@ -429,13 +429,13 @@ function Actions({
         className="font-mono font-bold transition-all duration-150"
         style={{
           height: 36, padding: "0 16px",
-          background: saved ? "#00d97e18" : "transparent",
-          border: "1px solid #00d97e44",
-          color: "#00d97e",
+          background: saved ? "#fafafa18" : "transparent",
+          border: "1px solid #fafafa44",
+          color: "#fafafa",
           fontSize: 10, letterSpacing: "0.15em",
           cursor: "pointer",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "#00d97e18")}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa18")}
         onMouseLeave={(e) => { if (!saved) (e.currentTarget.style.background = "transparent"); }}
       >
         {saved ? "SAVED ✓" : "SAVE TO PROGRAM"}
@@ -481,20 +481,20 @@ function AimsOverlay({ text, grant, onClose }: { text: string; grant: FundingGra
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center animate-praxis-fade"
-      style={{ background: "#050a14f0", padding: "60px 20px" }}
+      style={{ background: "#000000f0", padding: "60px 20px" }}
       onClick={onClose}
     >
       <div
         className="flex flex-col"
-        style={{ width: "min(800px, 100%)", maxHeight: "calc(100vh - 120px)", background: "#0a1628", border: "1px solid #1a2f50", padding: 24 }}
+        style={{ width: "min(800px, 100%)", maxHeight: "calc(100vh - 120px)", background: "#0a0a0a", border: "1px solid #262626", padding: 24 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #1a2f50", paddingBottom: 12 }}>
+        <div className="flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #262626", paddingBottom: 12 }}>
           <div>
-            <div className="font-mono font-bold" style={{ fontSize: 12, color: "#00d97e", letterSpacing: "0.2em" }}>
+            <div className="font-mono font-bold" style={{ fontSize: 12, color: "#fafafa", letterSpacing: "0.2em" }}>
               ◆ GENERATED SPECIFIC AIMS OUTLINE
             </div>
-            <div className="font-mono mt-1" style={{ fontSize: 10, color: "#5a7a9a" }}>
+            <div className="font-mono mt-1" style={{ fontSize: 10, color: "#a1a1a1" }}>
               {grant.organization} · {grant.name}
             </div>
           </div>
@@ -503,20 +503,20 @@ function AimsOverlay({ text, grant, onClose }: { text: string; grant: FundingGra
             onClick={onClose}
             className="font-mono"
             aria-label="Close"
-            style={{ width: 28, height: 28, background: "transparent", border: "1px solid #1a2f50", color: "#5a7a9a", cursor: "pointer", fontSize: 14 }}
+            style={{ width: 28, height: 28, background: "transparent", border: "1px solid #262626", color: "#a1a1a1", cursor: "pointer", fontSize: 14 }}
           >
             ×
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto praxis-scroll my-4 font-mono" style={{ fontSize: 12, color: "#e2eaf5", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+        <div className="flex-1 overflow-y-auto praxis-scroll my-4 font-mono" style={{ fontSize: 12, color: "#fafafa", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
           {text}
         </div>
-        <div className="flex gap-2 shrink-0" style={{ borderTop: "1px solid #1a2f50", paddingTop: 12 }}>
+        <div className="flex gap-2 shrink-0" style={{ borderTop: "1px solid #262626", paddingTop: 12 }}>
           <button
             type="button"
             onClick={onCopy}
             className="font-mono font-bold"
-            style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #00d97e44", color: "#00d97e", fontSize: 10, letterSpacing: "0.15em", cursor: "pointer" }}
+            style={{ height: 32, padding: "0 14px", background: "transparent", border: "1px solid #fafafa44", color: "#fafafa", fontSize: 10, letterSpacing: "0.15em", cursor: "pointer" }}
           >
             {copied ? "COPIED ✓" : "COPY"}
           </button>
@@ -524,7 +524,7 @@ function AimsOverlay({ text, grant, onClose }: { text: string; grant: FundingGra
             type="button"
             onClick={onDownload}
             className="font-mono font-extrabold"
-            style={{ height: 32, padding: "0 14px", background: "#00d97e", color: "#000", fontSize: 10, letterSpacing: "0.15em", cursor: "pointer" }}
+            style={{ height: 32, padding: "0 14px", background: "#fafafa", color: "#000", fontSize: 10, letterSpacing: "0.15em", cursor: "pointer" }}
           >
             DOWNLOAD .DOCX
           </button>
