@@ -6,14 +6,19 @@ import { cn } from "@/lib/utils";
 import { ExportPdfButton } from "./ExportPdfButton";
 
 interface Props {
-  status: GlobalStatus;
+  status: GlobalStatus | "PARTIAL";
   onReviewClick?: () => void;
   onExportClick?: () => void;
   exportDisabled?: boolean;
   exporting?: boolean;
+  onRetryFailed?: () => void;
+  hasFailures?: boolean;
 }
 
-export function Header({ status, onReviewClick, onExportClick, exportDisabled, exporting }: Props) {
+export function Header({
+  status, onReviewClick, onExportClick, exportDisabled, exporting,
+  onRetryFailed, hasFailures,
+}: Props) {
   return (
     <header className="no-print flex items-center h-12 w-full bg-background border-b border-border">
       <div className="pl-5 pr-4">
@@ -28,6 +33,15 @@ export function Header({ status, onReviewClick, onExportClick, exportDisabled, e
         </span>
       </div>
       <div className="ml-auto pr-5 flex items-center gap-3">
+        {hasFailures && onRetryFailed && (
+          <button
+            type="button"
+            onClick={onRetryFailed}
+            className="h-7 px-3 inline-flex items-center justify-center bg-transparent rounded-none font-mono text-[9px] font-bold tracking-[0.18em] uppercase border border-ax-amber/40 text-ax-amber/90 hover:bg-ax-amber/10 transition-colors"
+          >
+            ↻ RETRY FAILED
+          </button>
+        )}
         {onReviewClick && (
           <Button
             variant="outline"
@@ -51,13 +65,20 @@ export function Header({ status, onReviewClick, onExportClick, exportDisabled, e
   );
 }
 
-function StatusPill({ status }: { status: GlobalStatus }) {
+function StatusPill({ status }: { status: GlobalStatus | "PARTIAL" }) {
   const base =
     "rounded-none px-3 py-1 text-[10px] font-semibold tracking-[0.2em] uppercase border bg-transparent";
   if (status === "RUNNING") {
     return (
       <Badge variant="outline" className={cn(base, "text-ax-amber border-ax-amber/40 animate-status-pulse")}>
         ● Running
+      </Badge>
+    );
+  }
+  if (status === "PARTIAL") {
+    return (
+      <Badge variant="outline" className={cn(base, "text-ax-amber border-ax-amber/60 bg-ax-amber/10")}>
+        ◐ Partial Results
       </Badge>
     );
   }

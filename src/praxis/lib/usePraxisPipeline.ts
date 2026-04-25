@@ -355,6 +355,8 @@ interface State {
   keyFinding: string | null;
   hasData: { science?: boolean; protocol?: boolean; code?: boolean; budget?: boolean; funding?: boolean; risks?: boolean };
   error: string | null;
+  backendOffline: boolean;
+  lastHypothesis: string | null;
 }
 
 const initialAgents = AGENTS.reduce(
@@ -378,11 +380,13 @@ const initialState: State = {
   keyFinding: null,
   hasData: {},
   error: null,
+  backendOffline: false,
+  lastHypothesis: null,
 };
 
 type Action =
   | { type: "RESET" }
-  | { type: "START" }
+  | { type: "START"; hypothesis?: string }
   | { type: "AGENT_RUNNING"; agent: AgentId }
   | { type: "AGENT_COMPLETE"; agent: AgentId; data?: any }
   | { type: "AGENT_ERROR"; agent: AgentId }
@@ -399,14 +403,15 @@ type Action =
   | { type: "KEY_FINDING"; text: string }
   | { type: "DISMISS_KEY_FINDING" }
   | { type: "COMPLETE" }
-  | { type: "ERROR"; message: string };
+  | { type: "ERROR"; message: string }
+  | { type: "BACKEND_OFFLINE"; offline: boolean };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "RESET":
       return { ...initialState };
     case "START":
-      return { ...initialState, status: "RUNNING" };
+      return { ...initialState, status: "RUNNING", lastHypothesis: action.hypothesis ?? state.lastHypothesis };
     case "AGENT_RUNNING":
       return {
         ...state,
@@ -454,6 +459,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, status: "COMPLETE" };
     case "ERROR":
       return { ...state, status: "READY", error: action.message };
+    case "BACKEND_OFFLINE":
+      return { ...state, backendOffline: action.offline };
     default:
       return state;
   }
@@ -641,7 +648,7 @@ export function usePraxisPipeline() {
 
   const run = useCallback(async (hypothesis: string) => {
     stop();
-    dispatch({ type: "START" });
+    dispatch({ type: "START", hypothesis });
 
     // Try the live backend first; fall back to demo if unreachable.
     const ac = new AbortController();
@@ -654,6 +661,7 @@ export function usePraxisPipeline() {
         signal: ac.signal,
       });
       if (!res.ok || !res.body) throw new Error("backend unavailable");
+      dispatch({ type: "BACKEND_OFFLINE", offline: false });
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -680,6 +688,7 @@ export function usePraxisPipeline() {
       }
     } catch {
       // Backend unreachable — run a simulated pipeline so the UI still demos.
+      dispatch({ type: "BACKEND_OFFLINE", offline: true });
       startDemo(hypothesis);
     }
   }, [handleEvent, startDemo, stop]);
@@ -691,5 +700,10 @@ export function usePraxisPipeline() {
 
   const dismissKeyFinding = useCallback(() => dispatch({ type: "DISMISS_KEY_FINDING" }), []);
 
-  return { state, run, reset, dismissKeyFinding };
+  const retry = useCallback(() => {
+    if (!state.lastHypothesis) return;
+    run(state.lastHypothesis);
+  }, [run, state.lastHypothesis]);
+
+  return { state, run, reset, dismissKeyFinding, retry };
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { BudgetData, Reagent, ReagentPhase } from "../lib/types";
+import { AgentError } from "@/components/AgentError";
 
 const PHASE_COLOR: Record<ReagentPhase, string> = {
   1: "#fafafa",
@@ -30,9 +31,9 @@ function totalTier(total: number): "low" | "med" | "high" {
 type SortKey = "name" | "vendor" | "catalog" | "unitPrice" | "qty" | "total" | "phase";
 type SortDir = "asc" | "desc";
 
-interface Props { data: BudgetData; loading: boolean; }
+interface Props { data: BudgetData; loading: boolean; onRetry?: () => void; }
 
-export function BudgetTab({ data, loading }: Props) {
+export function BudgetTab({ data, loading, onRetry }: Props) {
   const [qtyOverrides, setQtyOverrides] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [vendorFilter, setVendorFilter] = useState<string | null>(null);
@@ -94,6 +95,12 @@ export function BudgetTab({ data, loading }: Props) {
   // Filtered total for footer
   const visibleTotal = useMemo(() => sorted.reduce((s, r) => s + r.total, 0), [sorted]);
 
+  // Reagents with empty/missing catalog count as "unmatched".
+  const unmatched = useMemo(
+    () => enriched.filter((r) => !r.catalog || r.catalog.trim() === "" || r.catalog === "—"),
+    [enriched]
+  );
+
   const onSort = (k: SortKey) => {
     if (k === sortKey) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortKey(k); setSortDir(k === "name" || k === "vendor" || k === "catalog" ? "asc" : "desc"); }
@@ -130,6 +137,19 @@ export function BudgetTab({ data, loading }: Props) {
       className="flex flex-col w-full animate-praxis-fade"
       style={{ background: "#000000", height: "100%", minHeight: 480 }}
     >
+      {unmatched.length > 0 && (
+        <div style={{ padding: "12px 20px 0" }}>
+          <AgentError
+            agent="REAGENTS"
+            title="Some reagents not found in database"
+            message={`${unmatched.length} reagent${unmatched.length === 1 ? "" : "s"} could not be matched to catalog numbers.`}
+            suggestion="Unmatched reagents shown without catalog # — verify manually."
+            canRetry={!!onRetry}
+            onRetry={onRetry}
+            compact
+          />
+        </div>
+      )}
       <CommandCenter
         grandTotal={grandTotal}
         totalColor={totalColorTier}
@@ -489,6 +509,7 @@ function Row({
 
   const tier = totalColor(row.total);
   const phaseColor = PHASE_COLOR[row.phase];
+  const isUnmatched = !row.catalog || row.catalog.trim() === "" || row.catalog === "—";
 
   const commitQty = () => {
     const n = Math.max(1, Math.floor(Number(draftQty) || row.qty));
@@ -508,7 +529,9 @@ function Row({
     window.setTimeout(() => setCopiedFlash(false), 700);
   };
 
-  const rowBg = selected ? "#111111" : hover ? "#11111180" : "transparent";
+  const rowBg = isUnmatched
+    ? (selected ? "hsl(var(--accent-amber) / 0.16)" : hover ? "hsl(var(--accent-amber) / 0.12)" : "hsl(var(--accent-amber) / 0.07)")
+    : selected ? "#111111" : hover ? "#11111180" : "transparent";
 
   const cell: React.CSSProperties = {
     padding: "0 12px",
@@ -541,7 +564,26 @@ function Row({
         onClick={copyCatalog}
         title={copiedFlash ? "Copied" : "Click to copy"}
       >
-        {row.catalog}
+        {row.catalog && row.catalog !== "—" ? row.catalog : (
+          <span className="inline-flex items-center gap-2">
+            <span
+              className="font-mono font-bold"
+              style={{ fontSize: 9, padding: "2px 6px", border: "1px solid hsl(var(--accent-amber) / 0.5)", color: "hsl(var(--accent-amber))", letterSpacing: "0.15em" }}
+            >
+              VERIFY
+            </span>
+            <a
+              href={`https://www.sigmaaldrich.com/US/en/search/${encodeURIComponent(row.name)}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="font-mono"
+              style={{ fontSize: 9, color: "#a1a1a1", textDecoration: "underline", letterSpacing: "0.1em" }}
+            >
+              SEARCH SIGMA ↗
+            </a>
+          </span>
+        )}
       </td>
 
       <td style={{ ...cell, color: "#a1a1a1", textAlign: "right" }}>{fmtUSD2(row.unitPrice)}</td>

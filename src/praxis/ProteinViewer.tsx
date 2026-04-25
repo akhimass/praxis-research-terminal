@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { TamarindData } from "./lib/types";
+import { AgentError } from "@/components/AgentError";
 
 // 3Dmol is loaded from CDN at runtime.
 declare global {
@@ -35,9 +36,10 @@ function ensure3Dmol(): Promise<void> {
 interface Props {
   tamarind: TamarindData | null;
   isLoading: boolean;
+  onRetry?: () => void;
 }
 
-export function ProteinViewer({ tamarind, isLoading }: Props) {
+export function ProteinViewer({ tamarind, isLoading, onRetry }: Props) {
   const pdbString = tamarind?.pdb ?? null;
   const proteinName = tamarind?.proteinName ?? null;
   const confidence = tamarind?.confidence ?? null;
@@ -53,12 +55,17 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
   const [showSurface, setShowSurface] = useState(false);
   const [showMutations, setShowMutations] = useState(true);
   const [elapsed, setElapsed] = useState(0);
+  const [timedOut, setTimedOut] = useState(false);
 
   // Loading timer
   useEffect(() => {
-    if (!isLoading) { setElapsed(0); return; }
+    if (!isLoading) { setElapsed(0); setTimedOut(false); return; }
     const start = Date.now();
-    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000);
+    const id = window.setInterval(() => {
+      const e = Math.floor((Date.now() - start) / 1000);
+      setElapsed(e);
+      if (e >= 60) setTimedOut(true);
+    }, 1000);
     return () => window.clearInterval(id);
   }, [isLoading]);
 
@@ -168,8 +175,14 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
   const pLDDTColor = pLDDT == null ? "#404040" : pLDDT > 90 ? "#fafafa" : pLDDT >= 70 ? "#a1a1a1" : "#ff4d4d";
 
   // Determine state
-  const state: "idle" | "loading" | "error" | "loaded" =
-    error ? "error" : pdbString ? "loaded" : isLoading || (tamarind && !pdbString && !error) ? "loading" : "idle";
+  const state: "idle" | "loading" | "error" | "timeout" | "loaded" =
+    error ? "error"
+    : pdbString ? "loaded"
+    : timedOut && isLoading ? "timeout"
+    : isLoading || (tamarind && !pdbString && !error) ? "loading"
+    : "idle";
+
+  const proteinForSearch = proteinName || tamarind?.source || "GyrA E. coli";
 
   return (
     <div
@@ -201,7 +214,25 @@ export function ProteinViewer({ tamarind, isLoading }: Props) {
       <div className="relative flex-1 min-h-0" style={{ background: "#030810" }}>
         {state === "idle" && <IdleState />}
         {state === "loading" && <LoadingState elapsed={elapsed} />}
-        {state === "error" && <ErrorState message={error ?? "Protein not found in AlphaFold database"} />}
+        {state === "error" && (
+          <ErrorPanel
+            title="Protein not in AlphaFold database"
+            message={`No predicted structure found for ${proteinForSearch}`}
+            suggestion="Try searching by UniProt ID, or use a homolog structure"
+            proteinName={proteinForSearch}
+            uniprot
+            onRetry={onRetry}
+          />
+        )}
+        {state === "timeout" && (
+          <ErrorPanel
+            title="Structure prediction timed out"
+            message="AlphaFold job exceeded 60s. Tamarind Bio servers may be busy."
+            suggestion="Try again in 2 minutes, or search RCSB manually"
+            proteinName={proteinForSearch}
+            onRetry={onRetry}
+          />
+        )}
         {/* 3Dmol target — always present so ref is stable, but visually hidden unless loaded */}
         <div
           ref={containerRef}
@@ -420,24 +451,60 @@ function Hex({ size, stroke, duration, reverse }: { size: number; stroke: string
   );
 }
 
-function ErrorState({ message }: { message: string }) {
+function ErrorPanel({
+  title, message, suggestion, proteinName, onRetry, uniprot,
+}: {
+  title: string;
+  message: string;
+  suggestion: string;
+  proteinName: string;
+  onRetry?: () => void;
+  uniprot?: boolean;
+}) {
+  const [query, setQuery] = useState(proteinName);
+  const rcsbHref = `https://www.rcsb.org/search?request=%7B%22query%22%3A%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22full_text%22%2C%22parameters%22%3A%7B%22value%22%3A%22${encodeURIComponent(query)}%22%7D%7D%2C%22return_type%22%3A%22entry%22%7D`;
+  const uniprotHref = `https://www.uniprot.org/uniprotkb?query=${encodeURIComponent(query)}`;
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <div className="font-mono" style={{ fontSize: 11, color: "#a1a1a1", letterSpacing: "0.2em" }}>
-        ⚠ STRUCTURE UNAVAILABLE
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
+      {/* Amber hex outline */}
+      <svg width={88} height={88} viewBox="0 0 80 80" className="mb-4">
+        <polygon points="40,4 72,22 72,58 40,76 8,58 8,22" fill="none" stroke="hsl(var(--accent-amber))" strokeWidth={1.5} />
+      </svg>
+      <div className="font-mono text-[10px] tracking-[0.2em] text-ax-amber uppercase mb-4">
+        STRUCTURE UNAVAILABLE
       </div>
-      <div className="font-mono mt-2" style={{ fontSize: 9, color: "#a1a1a1", letterSpacing: "0.1em" }}>
-        {message}
+      <div className="w-full max-w-sm">
+        <AgentError
+          agent="TAMARIND"
+          title={title}
+          message={message}
+          suggestion={suggestion}
+          canRetry={!!onRetry}
+          onRetry={onRetry}
+          actions={[
+            uniprot
+              ? { label: "SEARCH UNIPROT ↗", href: uniprotHref }
+              : { label: "SEARCH RCSB ↗", href: rcsbHref, variant: "primary" },
+          ]}
+        />
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            spellCheck={false}
+            className="flex-1 h-7 bg-card border border-border px-2 font-mono text-[10px] text-foreground outline-none focus:border-foreground/40"
+            placeholder="Protein name"
+          />
+          <a
+            href={uniprot ? uniprotHref : rcsbHref}
+            target="_blank"
+            rel="noreferrer"
+            className="h-7 px-3 inline-flex items-center justify-center bg-transparent rounded-none font-mono text-[9px] font-bold tracking-[0.18em] uppercase border border-foreground/40 text-foreground hover:bg-foreground/10 transition-colors"
+          >
+            SEARCH
+          </a>
+        </div>
       </div>
-      <a
-        href="https://www.uniprot.org/"
-        target="_blank"
-        rel="noreferrer"
-        className="font-mono mt-4"
-        style={{ fontSize: 10, color: "#fafafa", letterSpacing: "0.15em", textDecoration: "none", borderBottom: "1px solid #fafafa44", paddingBottom: 1 }}
-      >
-        SEARCH MANUALLY ↗
-      </a>
     </div>
   );
 }

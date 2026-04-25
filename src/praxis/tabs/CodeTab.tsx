@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CodeScript, CodeLang } from "../lib/types";
+import { AgentError } from "@/components/AgentError";
 
 /* ---------- highlight.js loader (singleton) ---------- */
 
@@ -92,6 +93,30 @@ function PraxisHljsStyle() {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ---------- error state ---------- */
+
+function ErrorContent({ assayType, onRetry }: { assayType: string; onRetry?: () => void }) {
+  return (
+    <div className="flex-1 flex items-center justify-center px-6">
+      <div className="w-full max-w-md">
+        <AgentError
+          agent="BIOINFORMATICS"
+          title="Script generation incomplete"
+          message="Could not generate analysis scripts for this assay type."
+          suggestion={`Download template scripts for ${assayType} assays.`}
+          canRetry={!!onRetry}
+          onRetry={onRetry}
+          actions={[
+            { label: "↓ MIC_ANALYSIS.PY", href: "/templates/mic_analysis_template.py" },
+            { label: "↓ VISUALIZATION.PY", href: "/templates/visualization_template.py" },
+            { label: "↓ STATISTICS.R", href: "/templates/statistics_template.R" },
+          ]}
+        />
+      </div>
+    </div>
+  );
 }
 
 /* ---------- empty + loading states ---------- */
@@ -461,9 +486,12 @@ function MetaPanel({ script }: { script: CodeScript }) {
 interface Props {
   scripts: CodeScript[];
   loading: boolean;
+  errored?: boolean;
+  assayType?: string;
+  onRetry?: () => void;
 }
 
-export function CodeTab({ scripts, loading }: Props) {
+export function CodeTab({ scripts, loading, errored, assayType = "MIC", onRetry }: Props) {
   const [active, setActive] = useState(0);
 
   // Reset selection if scripts change in a way that invalidates index
@@ -483,7 +511,10 @@ export function CodeTab({ scripts, loading }: Props) {
       )}
 
       <div className="flex flex-1 min-h-0">
-        {scripts.length === 0 && !loading && <EmptyState />}
+        {scripts.length === 0 && !loading && errored && (
+          <ErrorContent assayType={assayType} onRetry={onRetry} />
+        )}
+        {scripts.length === 0 && !loading && !errored && <EmptyState />}
         {scripts.length === 0 && loading && <LoadingState />}
         {current && (
           <>

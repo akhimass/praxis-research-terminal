@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FundingData, FundingGrant, GrantType } from "../lib/types";
+import { AgentError } from "@/components/AgentError";
 
 /* -------- formatting + color helpers -------- */
 
@@ -67,9 +68,9 @@ function highlightTerms(text: string): React.ReactNode[] {
 
 /* -------- main tab -------- */
 
-interface Props { data: FundingData; loading: boolean; }
+interface Props { data: FundingData; loading: boolean; onRetry?: () => void; errored?: boolean; }
 
-export function FundingTab({ data, loading }: Props) {
+export function FundingTab({ data, loading, onRetry, errored }: Props) {
   const grants = useMemo(
     () => [...data.grants].sort((a, b) => b.fit - a.fit),
     [data.grants]
@@ -83,6 +84,28 @@ export function FundingTab({ data, loading }: Props) {
   const selected = grants.find((g) => g.id === selectedId) ?? null;
 
   if (grants.length === 0) {
+    if (!loading && errored) {
+      return (
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="w-full max-w-md">
+            <AgentError
+              agent="FUNDING"
+              title="No grants matched current stage"
+              message="Program evidence level is below minimum for available grants."
+              suggestion="Complete more validation steps to qualify for funding."
+              canRetry={!!onRetry}
+              onRetry={onRetry}
+            />
+            <div className="mt-4 font-mono text-[10px] text-text-muted leading-relaxed border-l-2 border-border pl-3">
+              <div className="text-foreground/80 mb-1">Missing evidence → unlocks:</div>
+              <div>▸ Add in vitro IC50 data → unlocks CARB-X ($2M)</div>
+              <div>▸ Add LMIC partner site → unlocks Gates Grand Challenges ($250K)</div>
+              <div>▸ Add validated assay → unlocks CDC BAA-2026 ($1.2M)</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex-1 flex items-center justify-center" style={{ minHeight: 320 }}>
         <div className="font-mono animate-praxis-dots" style={{ fontSize: 11, color: "#a1a1a1", letterSpacing: "0.2em" }}>
