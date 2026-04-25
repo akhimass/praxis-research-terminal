@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FundingData, FundingGrant, GrantType } from "../lib/types";
 import { AgentError } from "@/components/AgentError";
+import { FundingRadar } from "@/components/visualizations/FundingRadar";
 
 /* -------- formatting + color helpers -------- */
 
@@ -361,10 +362,8 @@ function FitAnalysis({ grant }: { grant: FundingGrant }) {
   return (
     <div style={{ padding: 20 }}>
       <SectionHeader>FIT ANALYSIS</SectionHeader>
-      <div className="flex flex-col gap-2 mt-3">
-        {grant.fitBreakdown.map((c) => (
-          <FitBar key={c.label} label={c.label} score={c.score} />
-        ))}
+      <div className="mt-3 flex justify-center bg-card border border-border" style={{ padding: 12 }}>
+        <FundingRadar grant={grant} size={240} />
       </div>
 
       <div className="font-mono mt-5" style={{ fontSize: 11, color: "#a1a1a1", fontStyle: "italic", lineHeight: 1.7 }}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Paper, TamarindData } from "../lib/types";
 import { ProteinViewer } from "../ProteinViewer";
 import { AgentError } from "@/components/AgentError";
+import { EvidenceLandscape } from "@/components/visualizations/EvidenceLandscape";
 
 export type LiteratureStatus = "ok" | "no_results" | "api_error";
 export type NoveltySignal = "NOT FOUND" | "SIMILAR EXISTS" | "EXACT MATCH";
@@ -24,17 +25,20 @@ export function ScienceTab({
   onRetry,
 }: Props) {
   return (
-    <div className="grid w-full h-full animate-praxis-fade" style={{ gridTemplateColumns: "55fr 45fr", gap: 16 }}>
-      <LiteratureColumn
-        papers={papers}
-        status={literatureStatus}
-        novelty={novelty}
-        hypothesisTerms={hypothesisTerms}
-        onRetry={onRetry}
-      />
-      <div className="min-h-0">
-        <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} onRetry={onRetry} />
+    <div className="flex flex-col gap-4 w-full animate-praxis-fade">
+      <div className="grid w-full" style={{ gridTemplateColumns: "55fr 45fr", gap: 16, minHeight: 320 }}>
+        <LiteratureColumn
+          papers={papers}
+          status={literatureStatus}
+          novelty={novelty}
+          hypothesisTerms={hypothesisTerms}
+          onRetry={onRetry}
+        />
+        <div className="min-h-0">
+          <ProteinViewer tamarind={tamarind} isLoading={isStructureLoading} onRetry={onRetry} />
+        </div>
       </div>
+      {papers.length > 0 && <EvidenceLandscape papers={papers} />}
     </div>
   );
 }

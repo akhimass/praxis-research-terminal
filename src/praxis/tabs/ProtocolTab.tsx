@@ -1,29 +1,58 @@
 import { useState } from "react";
 import { ProtocolStep } from "../lib/types";
+import { ProtocolFlow } from "@/components/visualizations/ProtocolFlow";
 
 export function ProtocolTab({ steps }: { steps: ProtocolStep[] }) {
+  const [active, setActive] = useState<number | null>(null);
   if (!steps.length) return <Empty>No protocol generated yet.</Empty>;
   return (
-    <div className="animate-praxis-fade flex flex-col">
-      {steps.map((s, i) => (
-        <Step key={i} index={i + 1} step={s} isLast={i === steps.length - 1} />
-      ))}
+    <div className="animate-praxis-fade flex flex-col gap-4">
+      <ProtocolFlow
+        steps={steps}
+        activeIndex={active}
+        onSelectStep={(i) => {
+          setActive(i);
+          const el = document.getElementById(`praxis-step-${i}`);
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }}
+      />
+      <div className="flex flex-col">
+        {steps.map((s, i) => (
+          <Step
+            key={i}
+            index={i + 1}
+            step={s}
+            isLast={i === steps.length - 1}
+            forceOpen={active === i}
+            onToggle={(open) => setActive(open ? i : (active === i ? null : active))}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-function Step({ index, step, isLast }: { index: number; step: ProtocolStep; isLast: boolean }) {
-  const [open, setOpen] = useState(false);
+function Step({ index, step, isLast, forceOpen, onToggle }: {
+  index: number; step: ProtocolStep; isLast: boolean;
+  forceOpen?: boolean; onToggle?: (open: boolean) => void;
+}) {
+  const [openLocal, setOpenLocal] = useState(false);
+  const open = forceOpen ?? openLocal;
+  const toggle = () => {
+    const next = !open;
+    setOpenLocal(next);
+    onToggle?.(next);
+  };
   const num = String(index).padStart(2, "0");
   return (
-    <div className="flex gap-5 relative">
+    <div id={`praxis-step-${index - 1}`} className="flex gap-5 relative">
       <div className="flex flex-col items-center" style={{ width: 60 }}>
         <div className="font-mono font-extrabold" style={{ fontSize: 28, color: "#262626", lineHeight: 1 }}>
           {num}
         </div>
         {!isLast && <div className="flex-1 w-px mt-2" style={{ background: "#262626" }} />}
       </div>
-      <div className="flex-1 min-w-0 pb-6 cursor-pointer" onClick={() => setOpen((o) => !o)}>
+      <div className="flex-1 min-w-0 pb-6 cursor-pointer" onClick={toggle}>
         <div className="font-mono font-bold" style={{ fontSize: 12, color: "#fafafa" }}>
           {step.title}
         </div>
