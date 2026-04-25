@@ -37,7 +37,7 @@ npm run dev
 
 ## Deploy
 
-**Backend (Railway)** — connect the `backend/` directory, set start command from `Procfile` / `railway.json`, and configure env vars from `backend/.env.example`.
+**Backend (Railway)** — set the service **root directory** to `backend/`. Builds use **`backend/Dockerfile`**: code is copied to `/workspace/backend/` with `PYTHONPATH=/workspace` so `from backend…` imports match the monorepo. `railway.json` sets the Dockerfile builder and `/health` checks. Configure env vars from `backend/.env.example` (or set secrets in the Railway dashboard).
 
 **Frontend (Vercel)** — root directory `frontend/`, build `npm run build`, output `dist/`, set `VITE_API_URL` to your Railway API URL in project environment variables.
 
