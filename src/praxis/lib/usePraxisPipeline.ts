@@ -4,13 +4,37 @@ import {
   AGENTS,
   AgentRecord,
   AuditFlag,
+  BudgetData,
   CodeScript,
   GlobalStatus,
   Paper,
   ProtocolStep,
   TamarindData,
   TraceEntry,
+  Reagent,
 } from "./types";
+
+const DEMO_BUDGET: BudgetData = {
+  estimatedWeeks: 6,
+  reagents: [
+    { name: "Mueller-Hinton broth, 500 g",                vendor: "BD",       vendorFull: "Becton Dickinson",  catalog: "275730",   unitPrice: 142.00, qty: 2, phase: 1 },
+    { name: "Ciprofloxacin reference standard, 100 mg",   vendor: "Sigma",    vendorFull: "Sigma-Aldrich",     catalog: "17850",    unitPrice:  89.00, qty: 1, phase: 1 },
+    { name: "96-well microtiter plates, sterile, pk/100", vendor: "Corning",  vendorFull: "Corning Inc.",      catalog: "3596",     unitPrice: 248.00, qty: 4, phase: 1 },
+    { name: "DNA extraction kit (50 rxn)",                vendor: "Qiagen",   vendorFull: "Qiagen N.V.",       catalog: "69504",    unitPrice: 412.00, qty: 2, phase: 2 },
+    { name: "Q5 High-Fidelity 2X Master Mix, 100 rxn",    vendor: "NEB",      vendorFull: "New England Biolabs", catalog: "M0492S", unitPrice: 312.00, qty: 3, phase: 2 },
+    { name: "Sanger sequencing primers, custom (oligo)",  vendor: "IDT",      vendorFull: "Integrated DNA Tech.", catalog: "OLIG-CUST", unitPrice: 38.00, qty: 8, phase: 2 },
+    { name: "Sanger sequencing reactions (per sample)",   vendor: "Genewiz",  vendorFull: "Azenta / Genewiz",  catalog: "SANGER-1", unitPrice:   6.50, qty: 96, phase: 2 },
+    { name: "ATCC 25922 reference strain",                vendor: "ATCC",     vendorFull: "American Type Culture Collection", catalog: "25922", unitPrice: 412.00, qty: 1, phase: 1 },
+    { name: "DMSO, anhydrous, 100 mL",                    vendor: "Sigma",    vendorFull: "Sigma-Aldrich",     catalog: "276855",   unitPrice:  78.00, qty: 1, phase: 1 },
+    { name: "Agarose, molecular grade, 500 g",            vendor: "Bio-Rad",  vendorFull: "Bio-Rad Laboratories", catalog: "1613102", unitPrice: 196.00, qty: 1, phase: 2 },
+    { name: "GelRed nucleic acid stain, 10,000X",         vendor: "Biotium",  vendorFull: "Biotium Inc.",      catalog: "41003",    unitPrice: 285.00, qty: 1, phase: 2 },
+    { name: "Cryovials, 2 mL, sterile, pk/500",           vendor: "Corning",  vendorFull: "Corning Inc.",      catalog: "430659",   unitPrice: 168.00, qty: 2, phase: 1 },
+    { name: "Pipette tips, filtered, pk/960 (10 µL)",     vendor: "Rainin",   vendorFull: "Mettler-Toledo Rainin", catalog: "30389226", unitPrice: 312.00, qty: 2, phase: 1 },
+    { name: "Automated colony picker service",            vendor: "Twist",    vendorFull: "Twist Bioscience",  catalog: "PICK-AUTO", unitPrice: 2150.00, qty: 1, phase: 3 },
+    { name: "Whole-genome sequencing (NovaSeq lane)",     vendor: "Illumina", vendorFull: "Illumina Inc.",     catalog: "LANE-NS",  unitPrice: 4800.00, qty: 1, phase: 3 },
+    { name: "Cloud compute credits (analysis)",           vendor: "AWS",      vendorFull: "Amazon Web Services", catalog: "EC2-CRED", unitPrice: 1200.00, qty: 1, phase: 3 },
+  ],
+};
 
 const DEMO_SCRIPTS: CodeScript[] = [
   {
@@ -154,7 +178,7 @@ interface State {
   trace: TraceEntry[];
   papers: Paper[];
   protocol: ProtocolStep[];
-  reagents: any[];
+  budget: BudgetData;
   timeline: any | null;
   funding: any | null;
   gtm: any | null;
@@ -177,7 +201,7 @@ const initialState: State = {
   trace: [],
   papers: [],
   protocol: [],
-  reagents: [],
+  budget: { reagents: [], estimatedWeeks: undefined },
   timeline: null,
   funding: null,
   gtm: null,
@@ -198,7 +222,7 @@ type Action =
   | { type: "TRACE"; entry: TraceEntry }
   | { type: "PAPERS"; papers: Paper[] }
   | { type: "PROTOCOL"; steps: ProtocolStep[] }
-  | { type: "REAGENTS"; data: any }
+  | { type: "REAGENTS"; data: BudgetData }
   | { type: "TIMELINE"; data: any }
   | { type: "FUNDING"; data: any }
   | { type: "GTM"; data: any }
@@ -242,7 +266,7 @@ function reducer(state: State, action: Action): State {
     case "PROTOCOL":
       return { ...state, protocol: action.steps, hasData: { ...state.hasData, protocol: true } };
     case "REAGENTS":
-      return { ...state, reagents: action.data, hasData: { ...state.hasData, budget: true } };
+      return { ...state, budget: action.data, hasData: { ...state.hasData, budget: action.data.reagents.length > 0 } };
     case "TIMELINE":
       return { ...state, timeline: action.data };
     case "FUNDING":
@@ -301,7 +325,12 @@ export function usePraxisPipeline() {
       dispatch({ type: "AGENT_COMPLETE", agent, data: payload });
       if (agent === "literature" && payload?.papers) dispatch({ type: "PAPERS", papers: payload.papers });
       if (agent === "protocol"   && payload?.steps)  dispatch({ type: "PROTOCOL", steps: payload.steps });
-      if (agent === "reagents")     dispatch({ type: "REAGENTS", data: payload?.reagents ?? payload });
+      if (agent === "reagents") {
+        const reagents: Reagent[] = Array.isArray(payload?.reagents)
+          ? payload.reagents
+          : Array.isArray(payload) ? payload : [];
+        dispatch({ type: "REAGENTS", data: { reagents, estimatedWeeks: payload?.estimatedWeeks } });
+      }
       if (agent === "timeline")     dispatch({ type: "TIMELINE", data: payload });
       if (agent === "funding")      dispatch({ type: "FUNDING",  data: payload });
       if (agent === "gtm")          dispatch({ type: "GTM",      data: payload });
@@ -370,11 +399,7 @@ export function usePraxisPipeline() {
           });
         }
         if (agent.id === "reagents") {
-          dispatch({ type: "REAGENTS", data: { items: [
-            { name: "Mueller-Hinton broth", vendor: "BD", cost: 142 },
-            { name: "Ciprofloxacin reference standard", vendor: "Sigma", cost: 89 },
-            { name: "PCR mastermix 2x", vendor: "NEB", cost: 312 },
-          ], total: 543 } });
+          dispatch({ type: "REAGENTS", data: DEMO_BUDGET });
         }
         if (agent.id === "timeline") dispatch({ type: "TIMELINE", data: { weeks: 6, milestones: 4 } });
         if (agent.id === "funding") dispatch({ type: "FUNDING", data: { opportunities: [
