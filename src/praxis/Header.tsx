@@ -2,9 +2,10 @@ import { GlobalStatus } from "./lib/types";
 
 interface Props {
   status: GlobalStatus;
+  onReviewClick?: () => void;
 }
 
-export function Header({ status }: Props) {
+export function Header({ status, onReviewClick }: Props) {
   return (
     <header
       className="flex items-center h-12 w-full bg-background border-b border-border"
@@ -27,10 +28,35 @@ export function Header({ status }: Props) {
           AI RESEARCH EXECUTION SYSTEM
         </span>
       </div>
-      <div className="ml-auto pr-5">
+      <div className="ml-auto pr-5 flex items-center gap-3">
+        {onReviewClick && <ReviewButton onClick={onReviewClick} />}
         <StatusPill status={status} />
       </div>
     </header>
+  );
+}
+
+function ReviewButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center font-mono font-bold transition-colors"
+      style={{
+        height: 26,
+        padding: "0 12px",
+        background: "transparent",
+        border: "1px solid #00d97e44",
+        color: "#00d97e",
+        fontSize: 9,
+        letterSpacing: "0.2em",
+        cursor: "pointer",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "#00d97e18")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >
+      ◆ REVIEW PLAN
+    </button>
   );
 }
 
