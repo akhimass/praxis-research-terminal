@@ -115,7 +115,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-feature-settings: 'ss01', 'zero';
     -webkit-font-smoothing: antialiased;
   }
