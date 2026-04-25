@@ -14,13 +14,46 @@ const PHASE_NAME: Record<ReagentPhase, string> = {
   3: "SCALE",
 };
 
+const PHASE_COLOR: Record<ReagentPhase, string> = {
+  1: "#00d97e",
+  2: "#f0a500",
+  3: "#4d9fff",
+};
+
 function fmtUSD(n: number): string {
-  if (n >= 1000) return `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K`;
+  if (n >= 1000) {
+    const k = n / 1000;
+    return `$${k >= 10 ? Math.round(k) : k.toFixed(1)}K`;
+  }
+  // Round to nearest $100 for cleanliness if >= 100
+  if (n >= 100) return `$${Math.round(n / 100) * 100}`;
   return `$${Math.round(n)}`;
 }
 
-export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, height = 180 }: Props) {
+export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, height = 240 }: Props) {
   const [hover, setHover] = useState<{ x: number; y: number; week: number; spend: number; label?: string } | null>(null);
+
+  // Empty state
+  if (!reagents || reagents.length === 0) {
+    return (
+      <div 
+        className="bg-card border border-border flex items-center justify-center font-mono"
+        style={{ height, padding: 12, fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}
+      >
+        <div 
+          style={{ 
+            fontSize: 10, 
+            color: "#5a7a9a", 
+            letterSpacing: "0.2em",
+            animation: "praxis-pulse 2s ease-in-out infinite"
+          }}
+        >
+          BUDGET TIMELINE AGENT RUNNING...
+        </div>
+        <style>{`@keyframes praxis-pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }`}</style>
+      </div>
+    );
+  }
 
   const data = useMemo(() => {
     const totals: Record<ReagentPhase, number> = { 1: 0, 2: 0, 3: 0 };
@@ -61,14 +94,17 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
 
   if (data.grand === 0) {
     return (
-      <div className="bg-card border border-border flex items-center justify-center font-mono text-text-muted"
-        style={{ height, fontSize: 10, letterSpacing: "0.2em" }}>
+      <div 
+        className="bg-card border border-border flex items-center justify-center font-mono"
+        style={{ height, fontSize: 10, letterSpacing: "0.2em", color: "#5a7a9a", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}
+      >
         BUDGET TIMELINE · AWAITING DATA
       </div>
     );
   }
 
-  const padL = 50, padR = 18, padT = 18, padB = 28;
+  // Increased right padding to prevent cutoff
+  const padL = 56, padR = 80, padT = 28, padB = 36;
   const W = width, H = height;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
@@ -77,9 +113,11 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
 
   // Build path
   const linePath = data.points.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p.week)} ${yFor(p.spend)}`).join(" ");
-  const upper = data.points.map((p) => `${xFor(p.week)},${yFor(Math.min(data.grand, p.spend * 1.2))}`);
-  const lower = [...data.points].reverse().map((p) => `${xFor(p.week)},${yFor(Math.max(0, p.spend * 0.8))}`);
-  const envelopePoints = [...upper, ...lower].join(" ");
+  
+  // Confidence envelope - upper and lower bounds
+  const upperPath = data.points.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p.week)} ${yFor(Math.min(data.grand, p.spend * 1.2))}`).join(" ");
+  const lowerPath = [...data.points].reverse().map((p, i) => `${i === 0 ? "L" : "L"} ${xFor(p.week)} ${yFor(Math.max(0, p.spend * 0.8))}`).join(" ");
+  const envelopePath = upperPath + " " + lowerPath + " Z";
 
   // X ticks
   const xStep = Math.max(1, Math.round(data.weeks / 6));
@@ -88,55 +126,78 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
   if (xTicks[xTicks.length - 1] !== data.weeks) xTicks.push(data.weeks);
 
   return (
-    <div className="bg-card border border-border" style={{ padding: 12 }}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-mono uppercase text-text-muted" style={{ fontSize: 9, letterSpacing: "0.2em" }}>
-          CUMULATIVE SPEND · {data.weeks} WEEKS · {fmtUSD(data.grand)} TOTAL
+    <div className="bg-card border border-border" style={{ padding: 16 }}>
+      {/* Header with proper layout */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.2em", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}>
+          CUMULATIVE SPEND
         </div>
-        <div className="font-mono uppercase text-text-muted" style={{ fontSize: 9, letterSpacing: "0.18em" }}>
-          ±20% ENVELOPE · ◆ MILESTONE
+        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#5a7a9a", letterSpacing: "0.18em", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}>
+          {data.weeks} WEEKS
+        </div>
+        <div className="font-mono uppercase" style={{ fontSize: 9, color: "#00d97e", letterSpacing: "0.18em", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}>
+          {fmtUSD(data.grand)} TOTAL
         </div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" style={{ display: "block" }}
-        onMouseLeave={() => setHover(null)}>
+      
+      <svg 
+        viewBox={`0 0 ${W} ${H}`} 
+        width="100%" 
+        height={H} 
+        preserveAspectRatio="xMidYMid meet" 
+        style={{ display: "block", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}
+        onMouseLeave={() => setHover(null)}
+      >
         <defs>
           <linearGradient id="spendGrad" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%"   stopColor="hsl(var(--foreground))" />
-            <stop offset="100%" stopColor="hsl(var(--accent-amber))" />
+            <stop offset="0%" stopColor="#00d97e" />
+            <stop offset="50%" stopColor="#f0a500" />
+            <stop offset="100%" stopColor="#4d9fff" />
           </linearGradient>
         </defs>
+
+        {/* Legend - inside chart bounds */}
+        <g>
+          <text x={W - padR - 4} y={padT + 12} textAnchor="end" fontSize="8" fill="#5a7a9a" letterSpacing="0.1em">
+            ±20% ENVELOPE
+          </text>
+          <text x={W - padR - 4} y={padT + 24} textAnchor="end" fontSize="8" fill="#5a7a9a" letterSpacing="0.1em">
+            ◆ MILESTONE
+          </text>
+        </g>
 
         {/* Y grid lines + labels */}
         {[0, 0.25, 0.5, 0.75, 1].map((f) => {
           const y = yFor(data.grand * f);
           return (
             <g key={f}>
-              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="hsl(var(--border))" strokeOpacity={0.3} strokeWidth={1} />
-              <text x={padL - 6} y={y + 3} textAnchor="end"
-                fontFamily="'IBM Plex Mono', monospace" fontSize="8" fill="hsl(var(--text-muted))" letterSpacing="0.1em">
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#1a2f50" strokeOpacity={0.3} strokeWidth={1} />
+              <text x={padL - 8} y={y + 3} textAnchor="end" fontSize="8" fill="#2a4060" letterSpacing="0.1em">
                 {fmtUSD(data.grand * f)}
               </text>
             </g>
           );
         })}
 
-        {/* Phase backgrounds */}
+        {/* Phase backgrounds + dividers */}
         {data.phaseStarts.map((ps, i) => {
           const next = data.phaseStarts[i + 1];
           const x1 = xFor(ps.week);
           const x2 = next ? xFor(next.week) : xFor(data.weeks);
+          const phaseColor = PHASE_COLOR[ps.phase];
           return (
             <g key={i}>
               <rect x={x1} y={padT} width={x2 - x1} height={innerH}
-                fill="hsl(var(--foreground))" fillOpacity={0.025 + i * 0.015} />
-              <text x={x1 + 4} y={padT + 10}
-                fontFamily="'IBM Plex Mono', monospace" fontSize="8"
-                fill="hsl(var(--text-muted))" letterSpacing="0.18em">
+                fill={phaseColor} fillOpacity={0.03} />
+              {/* Phase label with background */}
+              <rect x={x1 + 2} y={padT - 14} width={80} height={12} fill="#050a14" />
+              <text x={x1 + 6} y={padT - 5} fontSize="9" fill={phaseColor} letterSpacing="0.18em">
                 P{ps.phase}: {PHASE_NAME[ps.phase]}
               </text>
+              {/* Phase divider - more visible */}
               {i > 0 && (
                 <line x1={x1} y1={padT} x2={x1} y2={H - padB}
-                  stroke="hsl(var(--text-muted))" strokeOpacity={0.5} strokeDasharray="3 3" strokeWidth={1} />
+                  stroke="#1a2f50" strokeWidth={1.5} strokeDasharray="6 3" />
               )}
             </g>
           );
@@ -145,16 +206,30 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
         {/* X ticks */}
         {xTicks.map((w) => (
           <g key={w}>
-            <text x={xFor(w)} y={H - padB + 14} textAnchor="middle"
-              fontFamily="'IBM Plex Mono', monospace" fontSize="8" fill="hsl(var(--text-muted))" letterSpacing="0.1em">
+            <text x={xFor(w)} y={H - padB + 18} textAnchor="middle" fontSize="8" fill="#5a7a9a" letterSpacing="0.1em">
               W{w}
             </text>
           </g>
         ))}
 
-        {/* Confidence envelope */}
-        <polygon points={envelopePoints}
-          fill="hsl(var(--foreground))" fillOpacity={0.06} stroke="none" />
+        {/* Confidence envelope - more visible */}
+        <path d={envelopePath} fill="#ffffff" fillOpacity={0.04} stroke="none" />
+        {/* Upper bound line */}
+        <path 
+          d={data.points.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p.week)} ${yFor(Math.min(data.grand, p.spend * 1.2))}`).join(" ")} 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeOpacity={0.15} 
+          strokeWidth={1} 
+        />
+        {/* Lower bound line */}
+        <path 
+          d={data.points.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p.week)} ${yFor(Math.max(0, p.spend * 0.8))}`).join(" ")} 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeOpacity={0.15} 
+          strokeWidth={1} 
+        />
 
         {/* Spend line */}
         <path d={linePath} fill="none" stroke="url(#spendGrad)" strokeWidth={2} />
@@ -162,18 +237,23 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
         {/* Data points */}
         {data.points.map((p, i) => (
           <circle key={i} cx={xFor(p.week)} cy={yFor(p.spend)} r={3}
-            fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />
+            fill="#e2eaf5" stroke="#050a14" strokeWidth={1} />
         ))}
 
-        {/* Milestones */}
+        {/* Milestones - filled with phase color */}
         {data.milestones.map((m, i) => {
           const x = xFor(m.week), y = yFor(m.spend);
+          const phaseColor = m.phase ? PHASE_COLOR[m.phase] : "#f0a500";
           return (
             <g key={i}
               onMouseEnter={() => setHover({ x, y, week: m.week, spend: m.spend, label: m.name })}
               style={{ cursor: "pointer" }}>
-              <polygon points={`${x},${y - 7} ${x + 6},${y} ${x},${y + 7} ${x - 6},${y}`}
-                fill="hsl(var(--accent-amber))" stroke="hsl(var(--background))" strokeWidth={1} />
+              <polygon 
+                points={`${x},${y - 7} ${x + 6},${y} ${x},${y + 7} ${x - 6},${y}`}
+                fill={phaseColor} 
+                stroke={phaseColor} 
+                strokeWidth={1.5} 
+              />
             </g>
           );
         })}
@@ -181,14 +261,12 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
         {/* Hover tooltip */}
         {hover && (
           <g pointerEvents="none">
-            <rect x={hover.x + 8} y={hover.y - 28} width={140} height={32}
-              fill="hsl(var(--surface-deep))" stroke="hsl(var(--border))" />
-            <text x={hover.x + 14} y={hover.y - 16}
-              fontFamily="'IBM Plex Mono', monospace" fontSize="9" fill="hsl(var(--foreground))" letterSpacing="0.1em">
+            <rect x={hover.x + 8} y={hover.y - 32} width={140} height={36}
+              fill="#0a1628" stroke="#1a2f50" />
+            <text x={hover.x + 14} y={hover.y - 18} fontSize="9" fill="#e2eaf5" letterSpacing="0.1em">
               {hover.label}
             </text>
-            <text x={hover.x + 14} y={hover.y - 4}
-              fontFamily="'IBM Plex Mono', monospace" fontSize="9" fill="hsl(var(--text-muted))" letterSpacing="0.1em">
+            <text x={hover.x + 14} y={hover.y - 4} fontSize="9" fill="#5a7a9a" letterSpacing="0.1em">
               W{hover.week} · {fmtUSD(hover.spend)}
             </text>
           </g>
@@ -197,3 +275,5 @@ export function BudgetTimeline({ reagents, estimatedWeeks = 12, width = 560, hei
     </div>
   );
 }
+
+export default BudgetTimeline;
