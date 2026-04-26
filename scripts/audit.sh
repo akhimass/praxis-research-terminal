@@ -2,7 +2,7 @@
 # PRAXIS smoke audit: backend HTTP + local frontend build.
 # Usage: bash scripts/audit.sh [RAILWAY_BASE_URL] [VERCEL_BASE_URL]
 # Example:
-#   bash scripts/audit.sh https://praxis-backend.up.railway.app https://praxis-research.vercel.app
+#   bash scripts/audit.sh https://praxis-research-terminal-production.up.railway.app https://praxisalautomation.vercel.app
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

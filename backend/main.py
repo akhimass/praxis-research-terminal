@@ -62,6 +62,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "https://praxis-research-terminal.vercel.app",
         "https://praxis-research.vercel.app",
+        "https://praxisalautomation.vercel.app",
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,

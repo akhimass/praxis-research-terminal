@@ -4,8 +4,8 @@ Turn a scientific hypothesis into a complete, executable experiment plan in unde
 
 ## Live demo
 
-- Frontend: https://praxis-research-terminal.vercel.app
-- API: https://praxis-backend.up.railway.app
+- Frontend: https://praxisalautomation.vercel.app
+- API: https://praxis-research-terminal-production.up.railway.app
 
 ## Stack
 
