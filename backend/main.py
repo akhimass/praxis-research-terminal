@@ -18,6 +18,7 @@ from backend.agents._llm import claude_text
 from backend.agents.orchestrator import run_demo_pipeline, run_praxis_pipeline
 from backend.data import feedback_store
 from backend.data.feedback_store import get_relevant_corrections, get_stats, save_review
+from backend.utils.budget_guard import get_usage_snapshot
 
 load_praxis_env()
 
@@ -183,6 +184,28 @@ async def root() -> dict[str, str]:
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/usage")
+async def usage() -> dict[str, Any]:
+    """Anthropic session token spend estimate for this worker (see ``budget_guard``)."""
+    return get_usage_snapshot()
+
+
+@app.get("/tamarind/status")
+async def tamarind_status() -> dict[str, Any]:
+    """Jobs charged against the local Tamarind cache cap (see ``tamarind_cache.json``)."""
+    from backend.agents.tamarind_agent import CACHE_PATH, _load_cache
+    from backend.agents._env import env_str
+
+    cache = _load_cache() if CACHE_PATH.exists() else {}
+    jobs_used = int(cache.get("__jobs_used__", 0) or 0)
+    max_jobs = int(env_str("TAMARIND_MAX_JOBS_PER_CACHE", "10") or "10")
+    return {
+        "jobs_used": jobs_used,
+        "jobs_remaining": max(0, max_jobs - jobs_used),
+        "cache_path": str(CACHE_PATH),
+    }
 
 
 @app.get("/tamarind/test")

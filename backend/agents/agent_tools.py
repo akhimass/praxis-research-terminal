@@ -15,6 +15,7 @@ from typing import Any
 
 from backend.agents._env import env_str
 from backend.agents._llm import LAST_MESSAGE_USAGE, parse_json_loose
+from backend.utils.budget_guard import record_message_usage
 
 from backend.models.research_program import ResearchProgram, Stage, TamarindOutput
 
@@ -215,6 +216,7 @@ async def run_critique_agent(plan_content: str, plan_section: str) -> list[dict[
         system=system,
         messages=[{"role": "user", "content": user}],
     )
+    record_message_usage(message)
     parts: list[str] = []
     for block in message.content:
         if getattr(block, "type", None) == "text":
@@ -483,6 +485,7 @@ def _apply_usage(message: Any) -> None:
         return
     LAST_MESSAGE_USAGE["input"] = getattr(usage_obj, "input_tokens", None)
     LAST_MESSAGE_USAGE["output"] = getattr(usage_obj, "output_tokens", None)
+    record_message_usage(message)
 
 
 async def run_agentic_loop(

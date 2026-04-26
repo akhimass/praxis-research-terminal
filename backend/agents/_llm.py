@@ -5,6 +5,7 @@ import re
 from typing import Any
 
 from backend.agents._env import env_str
+from backend.utils.budget_guard import record_message_usage
 
 # Populated after each successful `claude_messages_json` call (best-effort).
 LAST_MESSAGE_USAGE: dict[str, Any] = {}
@@ -51,6 +52,7 @@ async def claude_messages_json(
     if usage_obj is not None:
         LAST_MESSAGE_USAGE["input"] = getattr(usage_obj, "input_tokens", None)
         LAST_MESSAGE_USAGE["output"] = getattr(usage_obj, "output_tokens", None)
+    record_message_usage(message)
     parts: list[str] = []
     for block in message.content:
         if getattr(block, "type", None) == "text":
@@ -89,6 +91,7 @@ async def claude_text(
         if usage_obj is not None:
             LAST_MESSAGE_USAGE["input"] = getattr(usage_obj, "input_tokens", None)
             LAST_MESSAGE_USAGE["output"] = getattr(usage_obj, "output_tokens", None)
+        record_message_usage(message)
         parts: list[str] = []
         for block in message.content:
             if getattr(block, "type", None) == "text":
