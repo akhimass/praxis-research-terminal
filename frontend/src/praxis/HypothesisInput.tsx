@@ -33,11 +33,14 @@ export const HypothesisInput = forwardRef<HypothesisInputRef, Props>(
       return `${wordCount} words · ✓ excellent detail`;
     };
 
-    const getWordCountColor = () => {
-      if (wordCount <= 10) return "#2a4060";
-      if (wordCount <= 30) return "#5a7a9a";
-      return "#00d97e";
-    };
+    const wordCountClass =
+      wordCount === 0
+        ? "text-muted-foreground"
+        : wordCount <= 10
+          ? "text-muted-foreground"
+          : wordCount <= 30
+            ? "text-muted-foreground/90"
+            : "text-foreground";
 
     const placeholder = `Describe your scientific hypothesis...
 
@@ -54,33 +57,25 @@ Example: Supplementing C57BL/6 mice with Lactobacillus rhamnosus GG for 4 weeks 
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
           spellCheck={false}
-          className="h-[120px] resize-none rounded-none border-border bg-background px-2.5 py-2 font-mono text-[11px] text-foreground placeholder:text-text-muted focus-visible:border-ax-green focus-visible:ring-0 focus-visible:ring-offset-0 praxis-scroll"
+          className="h-[120px] resize-none rounded-md border-input bg-background px-2.5 py-2 font-mono text-[11px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 praxis-scroll"
         />
-        <div className="flex justify-between mt-1 mb-3 font-mono text-[10px]">
-          <span style={{ color: "#2a4060" }}>
-            {value.length === 0 ? "—" : `${value.length} chars`}
-          </span>
-          <span style={{ color: getWordCountColor() }}>
-            {getWordCountLabel()}
-          </span>
+        <div className="flex justify-between mt-1 mb-3 font-mono text-[10px] text-muted-foreground">
+          <span>{value.length === 0 ? "—" : `${value.length} chars`}</span>
+          <span className={cn(wordCountClass)}>{getWordCountLabel()}</span>
         </div>
         <Button
           type="button"
+          variant={canRun ? "default" : "secondary"}
           disabled={!canRun}
           onClick={() => canRun && onRun(value.trim())}
           className={cn(
-            "w-full h-9 rounded-none text-[11px] font-bold tracking-[0.15em] uppercase transition-all",
-            canRun
-              ? "bg-ax-green text-black hover:bg-ax-green hover:brightness-110"
-              : "bg-secondary text-text-muted cursor-not-allowed hover:bg-secondary",
+            "w-full h-9 rounded-md text-[11px] font-bold tracking-[0.15em] uppercase",
+            !canRun && "cursor-not-allowed opacity-60",
           )}
         >
           ▶ Run Praxis
         </Button>
-        <div
-          className="font-mono text-[8px] text-center mt-1.5"
-          style={{ color: "#1a2f50" }}
-        >
+        <div className="font-mono text-[8px] text-center mt-1.5 text-muted-foreground">
           Results in ~90 seconds · Literature QC fires first
         </div>
       </div>

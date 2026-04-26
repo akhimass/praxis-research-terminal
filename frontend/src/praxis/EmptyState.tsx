@@ -1,4 +1,6 @@
-import { useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const EXAMPLE_HYPOTHESES = [
   {
@@ -42,121 +44,84 @@ interface Props {
 export function EmptyState({ onSelectHypothesis, textareaRef }: Props) {
   const handlePillClick = (hypothesis: string) => {
     onSelectHypothesis?.(hypothesis);
-    // Focus the textarea after selection
     setTimeout(() => {
       textareaRef?.current?.focus();
     }, 50);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-[60vh] py-12">
+    <div className="flex flex-col items-center justify-center w-full min-h-[60vh] py-12 bg-background text-foreground">
       <div className="max-w-[720px] mx-auto px-4 text-center">
-        {/* Top Section */}
-        <div
-          className="font-mono text-[11px] font-normal tracking-[0.3em] uppercase mb-3"
-          style={{ color: "#5a7a9a" }}
-        >
+        <p className="font-mono text-[11px] font-normal tracking-[0.3em] uppercase mb-3 text-muted-foreground">
           THE AI SCIENTIST
-        </div>
+        </p>
 
-        <h1
-          className="font-mono font-extrabold text-[72px] tracking-[0.12em] leading-none select-none mb-6"
-          style={{ color: "#e2eaf5" }}
-        >
+        <h1 className="font-mono font-extrabold text-[64px] md:text-[72px] tracking-[0.1em] leading-none select-none mb-6 text-foreground">
           PRAXIS
         </h1>
 
-        <p
-          className="font-mono text-[14px] font-normal mb-2"
-          style={{ color: "#5a7a9a" }}
-        >
+        <p className="font-mono text-[14px] font-normal mb-2 text-muted-foreground">
           From hypothesis to executable experiment plan in 90 seconds.
         </p>
 
-        <p
-          className="font-mono text-[11px] font-normal leading-[1.8] mb-8 max-w-[560px] mx-auto"
-          style={{ color: "#2a4060" }}
-        >
+        <p className="font-mono text-[11px] font-normal leading-[1.8] mb-8 max-w-[560px] mx-auto text-muted-foreground">
           Type a scientific question. PRAXIS searches 214M papers,
           designs your protocol, sources your reagents, builds your
           budget, generates your analysis code, and finds your funding.
         </p>
 
-        {/* Example Hypotheses */}
-        <div
-          className="font-mono text-[9px] font-bold tracking-[0.2em] uppercase mb-2.5"
-          style={{ color: "#2a4060" }}
-        >
+        <p className="font-mono text-[9px] font-bold tracking-[0.2em] uppercase mb-2.5 text-muted-foreground">
           TRY AN EXAMPLE
-        </div>
+        </p>
 
         <div className="flex flex-wrap justify-center gap-2 mb-8">
           {EXAMPLE_HYPOTHESES.map((ex, i) => (
-            <button
+            <Button
               key={i}
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => handlePillClick(ex.hypothesis)}
-              className="px-3.5 py-2 font-mono text-[10px] cursor-pointer transition-all duration-150"
-              style={{
-                background: "#0d1e35",
-                border: "1px solid #1a2f50",
-                color: "#5a7a9a",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#00d97e66";
-                e.currentTarget.style.color = "#00d97e";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#1a2f50";
-                e.currentTarget.style.color = "#5a7a9a";
-              }}
+              className={cn(
+                "h-auto min-h-9 rounded-md border-border bg-card px-3.5 py-2 font-mono text-[10px] font-normal",
+                "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                "whitespace-normal text-left max-w-[280px]",
+              )}
             >
-              {ex.emoji}&nbsp;&nbsp;{ex.label}
-            </button>
+              <span className="mr-1.5 opacity-90">{ex.emoji}</span>
+              {ex.label}
+            </Button>
           ))}
         </div>
 
-        {/* What Praxis Generates */}
-        <div
-          className="font-mono text-[9px] font-bold tracking-[0.2em] uppercase mb-3"
-          style={{ color: "#2a4060" }}
-        >
+        <p className="font-mono text-[9px] font-bold tracking-[0.2em] uppercase mb-3 text-muted-foreground">
           WHAT PRAXIS GENERATES
-        </div>
+        </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 text-left">
           {FEATURE_TILES.map((tile, i) => (
-            <div
+            <Card
               key={i}
-              className="p-3.5 text-left"
-              style={{
-                background: "#0a1628",
-                border: "1px solid #1a2f50",
-              }}
+              className="rounded-md border-border bg-card text-card-foreground shadow-none"
             >
-              <div className="text-[22px] mb-2 opacity-70">{tile.icon}</div>
-              <div
-                className="font-mono text-[11px] font-bold mb-1 tracking-[0.03em]"
-                style={{ color: "#e2eaf5" }}
-              >
-                {tile.title}
-              </div>
-              <div
-                className="font-mono text-[9px] leading-[1.5]"
-                style={{ color: "#5a7a9a" }}
-              >
-                {tile.desc}
-              </div>
-            </div>
+              <CardHeader className="space-y-1 p-4 pb-2">
+                <div className="text-[22px] leading-none opacity-90">{tile.icon}</div>
+                <CardTitle className="font-mono text-[11px] font-bold tracking-[0.03em] text-foreground">
+                  {tile.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <CardDescription className="font-mono text-[9px] leading-[1.5] text-muted-foreground">
+                  {tile.desc}
+                </CardDescription>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Bottom Hint */}
-        <div
-          className="font-mono text-[9px] mt-6"
-          style={{ color: "#1a2f50" }}
-        >
+        <p className="font-mono text-[9px] mt-6 text-muted-foreground">
           ← Type your hypothesis or click an example above
-        </div>
+        </p>
       </div>
     </div>
   );

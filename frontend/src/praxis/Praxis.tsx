@@ -148,7 +148,7 @@ export function Praxis() {
 
       <div className="flex flex-1 min-h-0">
         {/* ZONE B */}
-        <aside className="flex flex-col shrink-0 w-[320px] bg-surface-deep border-r border-border">
+        <aside className="flex flex-col shrink-0 w-[320px] bg-card border-r border-border">
           <HypothesisInput ref={hypothesisRef} disabled={state.status === "RUNNING"} onRun={run} />
           <AgentPanel agents={state.agents} />
           <TraceLog entries={state.trace} />
