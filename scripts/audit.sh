@@ -20,27 +20,29 @@ if [[ -z "$RAILWAY" ]]; then
   echo "  Run: bash scripts/audit.sh https://your-backend.up.railway.app https://your-app.vercel.app"
 else
   echo -n "Backend health: "
-  HEALTH=$(curl -sf "$RAILWAY/health" || echo '{"error":"curl failed"}')
+  HEALTH=$(curl -sS -m 20 "$RAILWAY/health" 2>/dev/null || echo '{"error":"curl failed"}')
   echo "$HEALTH" | grep -q '"status":"ok"' && echo "✅ $HEALTH" || echo "❌ $HEALTH"
 
   echo -n "Usage tracking: "
-  USAGE=$(curl -sf "$RAILWAY/usage" || echo '{}')
-  echo "$USAGE" | grep -q "session_cost" && echo "✅ $USAGE" || echo "❌ Not found / failed"
+  # Do not use curl -f: Railway may return 502 JSON; we want the body for debugging.
+  USAGE=$(curl -sS -m 25 "$RAILWAY/usage" 2>/dev/null || echo '{}')
+  echo "$USAGE" | grep -q "session_cost" && echo "✅ $USAGE" || echo "❌ Not found / failed / timeout — body: ${USAGE:0:200}"
 
   echo -n "Tamarind Bio: "
-  TAM=$(curl -sf "$RAILWAY/tamarind/test" || echo '{}')
+  # AlphaFold / RCSB can exceed 120s when cold; cap at 3m so the script can finish.
+  TAM=$(curl -sS -m 180 "$RAILWAY/tamarind/test" 2>/dev/null || echo '{}')
   echo "$TAM" | grep -q "has_pdb" && echo "✅ $TAM" || echo "❌ $TAM"
 
   echo -n "Tamarind status: "
-  TS=$(curl -sf "$RAILWAY/tamarind/status" || echo '{}')
+  TS=$(curl -sS -m 15 "$RAILWAY/tamarind/status" 2>/dev/null || echo '{}')
   echo "$TS" | grep -q "jobs_used" && echo "✅ $TS" || echo "❌ $TS"
 
   echo -n "Feedback store: "
-  REV=$(curl -sf "$RAILWAY/review/stats" || echo '{}')
+  REV=$(curl -sS -m 20 "$RAILWAY/review/stats" 2>/dev/null || echo '{}')
   echo "$REV" | grep -q "total_reviews" && echo "✅ $REV" || echo "❌ $REV"
 
   echo -n "MIC corrections: "
-  CORR=$(curl -sf "$RAILWAY/review/corrections/mic_assay" || echo '{}')
+  CORR=$(curl -sS -m 20 "$RAILWAY/review/corrections/mic_assay" 2>/dev/null || echo '{}')
   echo "$CORR" | grep -q "corrections" && echo "✅ Corrections payload present" || echo "❌ No corrections"
 
   echo -n "SSE pipeline: "
@@ -65,7 +67,7 @@ else
 
   echo ""
   echo "─── FINAL RESOURCE STATE (remote) ───────────────"
-  curl -sf "$RAILWAY/usage" | python3 -c "
+  curl -sS -m 25 "$RAILWAY/usage" 2>/dev/null | python3 -c "
 import json,sys
 raw=sys.stdin.read().strip() or '{}'
 try:
