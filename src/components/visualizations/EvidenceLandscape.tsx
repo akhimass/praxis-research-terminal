@@ -96,6 +96,10 @@ export function EvidenceLandscape({ papers, height = 280 }: Props) {
   for (let y = minYear; y <= maxYear; y += tickStep) ticks.push(y);
   if (ticks[ticks.length - 1] !== maxYear) ticks.push(maxYear);
 
+  // Get hovered paper data for tooltip
+  const hoveredDot = hover !== null ? dots[hover] : null;
+  const hoveredPaper = hoveredDot?.paper;
+
   return (
     <div className="bg-card border border-border" style={{ padding: 16 }}>
       <div className="flex items-center justify-between mb-3">
@@ -188,13 +192,49 @@ export function EvidenceLandscape({ papers, height = 280 }: Props) {
         })}
       </svg>
 
-      {/* Hover tooltip */}
-      <div style={{ minHeight: 32 }} className="mt-2">
-        {hover !== null && dots[hover] && (
-          <div className="font-mono text-foreground" style={{ fontSize: 10, lineHeight: 1.5 }}>
-            <span style={{ color: BUCKETS[dots[hover].bucket].color }}>{dots[hover].year} · {BUCKETS[dots[hover].bucket].label}</span>
-            <span style={{ color: "#5a7a9a" }}> — </span>
-            <span style={{ color: "#e2eaf5" }}>{dots[hover].paper.title}</span>
+      {/* Enhanced hover tooltip */}
+      <div style={{ minHeight: 56 }} className="mt-2">
+        {hoveredPaper && hoveredDot && (
+          <div className="font-mono" style={{ lineHeight: 1.5 }}>
+            {/* Title */}
+            <div style={{ fontSize: 11, color: "#e2eaf5", fontWeight: 700 }}>
+              {hoveredPaper.title}
+            </div>
+            {/* Authors · Journal · Year */}
+            <div style={{ fontSize: 9, color: "#5a7a9a", marginTop: 2 }}>
+              {hoveredPaper.authors} · {hoveredPaper.journal} · {hoveredPaper.year}
+            </div>
+            {/* Source badge + citation line */}
+            <div className="flex items-center gap-2 mt-1.5">
+              {/* Source badge */}
+              <span
+                className="font-mono font-bold"
+                style={{
+                  fontSize: 7,
+                  padding: "2px 5px",
+                  background: hoveredPaper.source === "semantic_scholar" ? "#4d9fff18" : "#5a7a9a18",
+                  border: `1px solid ${hoveredPaper.source === "semantic_scholar" ? "#4d9fff44" : "#5a7a9a33"}`,
+                  color: hoveredPaper.source === "semantic_scholar" ? "#4d9fff" : "#5a7a9a",
+                }}
+              >
+                {hoveredPaper.source === "semantic_scholar" ? "S2" : "WEB"}
+              </span>
+              {/* Citation count */}
+              {(hoveredPaper.citation_count ?? 0) > 0 && (
+                <span style={{ fontSize: 8, color: "#2a4060" }}>
+                  {hoveredPaper.citation_count} citations
+                  {(hoveredPaper.influential_citations ?? 0) > 0 && (
+                    <span style={{ color: "#f0a500" }}> · {hoveredPaper.influential_citations} influential</span>
+                  )}
+                </span>
+              )}
+            </div>
+            {/* TLDR preview */}
+            {hoveredPaper.tldr && hoveredPaper.tldr.trim().length > 0 && (
+              <div style={{ fontSize: 9, color: "#5a7a9a", fontStyle: "italic", marginTop: 4 }}>
+                {hoveredPaper.tldr.length > 80 ? hoveredPaper.tldr.slice(0, 80) + "..." : hoveredPaper.tldr}
+              </div>
+            )}
           </div>
         )}
       </div>
