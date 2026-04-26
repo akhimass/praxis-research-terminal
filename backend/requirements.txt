@@ -21,6 +21,7 @@ jiter==0.14.0
 modal>=0.64.0
 pydantic==2.13.3
 pydantic_core==2.46.3
+python-multipart==0.0.20
 python-dotenv==1.2.2
 PyYAML==6.0.3
 regex==2026.4.4
