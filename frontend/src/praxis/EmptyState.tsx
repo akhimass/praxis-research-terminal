@@ -24,14 +24,14 @@ const EXAMPLE_HYPOTHESES = [
 ];
 
 const FEATURE_TILES = [
-  { icon: "📋", title: "PROTOCOL", desc: "Step-by-step SOP with volumes, controls, equipment", color: "#00d97e" },
-  { icon: "🔬", title: "LITERATURE QC", desc: "Novelty signal from 214M papers before plan generates", color: "#9d6fff" },
-  { icon: "🧪", title: "REAGENTS", desc: "Real catalog numbers, vendors, current pricing", color: "#f0a500" },
-  { icon: "📊", title: "BUDGET & TIMELINE", desc: "Phase breakdown, Gantt chart, critical path", color: "#4d9fff" },
-  { icon: "🧬", title: "STRUCTURE", desc: "AlphaFold protein structure via Tamarind Bio", color: "#4d9fff" },
-  { icon: "</>", title: "ANALYSIS CODE", desc: "Runnable Python & R scripts, download ready", color: "#00d97e" },
-  { icon: "💰", title: "FUNDING", desc: "NIH, BARDA, Wellcome — grant fit scored automatically", color: "#f0a500" },
-  { icon: "🔄", title: "LEARNING LOOP", desc: "Corrections improve future plans automatically", color: "#9d6fff" },
+  { icon: "📋", title: "PROTOCOL", desc: "Step-by-step SOP with volumes, controls, equipment" },
+  { icon: "🔬", title: "LITERATURE QC", desc: "Novelty signal from 214M papers before plan generates" },
+  { icon: "🧪", title: "REAGENTS", desc: "Real catalog numbers, vendors, current pricing" },
+  { icon: "📊", title: "BUDGET & TIMELINE", desc: "Phase breakdown, Gantt chart, critical path" },
+  { icon: "🧬", title: "STRUCTURE", desc: "AlphaFold protein structure via Tamarind Bio" },
+  { icon: "</>", title: "ANALYSIS CODE", desc: "Runnable Python & R scripts, download ready" },
+  { icon: "💰", title: "FUNDING", desc: "NIH, BARDA, Wellcome — grant fit scored automatically" },
+  { icon: "🔄", title: "LEARNING LOOP", desc: "Corrections improve future plans automatically" },
 ];
 
 interface Props {
@@ -60,7 +60,7 @@ export function EmptyState({ onSelectHypothesis, textareaRef }: Props) {
         </div>
 
         <h1
-          className="font-mono font-extrabold text-[52px] tracking-[0.08em] leading-none select-none mb-4"
+          className="font-mono font-extrabold text-[72px] tracking-[0.12em] leading-none select-none mb-6"
           style={{ color: "#e2eaf5" }}
         >
           PRAXIS
@@ -133,16 +133,16 @@ export function EmptyState({ onSelectHypothesis, textareaRef }: Props) {
                 border: "1px solid #1a2f50",
               }}
             >
-              <div className="text-[22px] mb-2 opacity-80">{tile.icon}</div>
+              <div className="text-[22px] mb-2 opacity-70">{tile.icon}</div>
               <div
                 className="font-mono text-[11px] font-bold mb-1 tracking-[0.03em]"
-                style={{ color: tile.color }}
+                style={{ color: "#e2eaf5" }}
               >
                 {tile.title}
               </div>
               <div
                 className="font-mono text-[9px] leading-[1.5]"
-                style={{ color: "#2a4060" }}
+                style={{ color: "#5a7a9a" }}
               >
                 {tile.desc}
               </div>
