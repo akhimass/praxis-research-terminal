@@ -8,6 +8,8 @@ venv/
 *.egg-info/
 praxis_feedback.db
 **/praxis_feedback.db
+backend/rag/chroma_db/
+backend/data/tamarind_cache.json
 
 # Node
 node_modules/

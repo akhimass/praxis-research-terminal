@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -20,14 +20,20 @@ class Stage(str, Enum):
 
 
 class PaperResult(BaseModel):
+    pmid: str | None = None
+    s2_paper_id: str | None = None
     title: str
     authors: str | None = None
     journal: str | None = None
     year: int | None = None
     abstract: str | None = None
-    pmid: str | None = None
     url: str | None = None
+    tldr: str | None = None
+    citation_count: int = 0
+    influential_citations: int = 0
+    pdf_url: str | None = None
     relevance_score: float = Field(default=0.0, ge=0, le=1)
+    source: str = "tavily"
     quantitative_claims: list[str] = Field(default_factory=list)
     protocol_hints: list[str] = Field(default_factory=list)
 
@@ -146,6 +152,8 @@ class ResearchProgram(BaseModel):
     compound_type: str = "small_molecule"
     evidence: dict[str, bool] = Field(default_factory=dict)
     feedback_few_shot: str = ""
+    # Populated by Claude tool `emit_sse_event`; orchestrator drains into SSE traces.
+    agent_tool_events: list[dict[str, Any]] = Field(default_factory=list)
 
     novelty_signal: Literal["not_found", "similar_exists", "exact_match"] = "not_found"
     novelty_references: list[PaperResult] = Field(default_factory=list)

@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 
 from backend.agents._env import env_str
-from backend.agents._llm import claude_messages_json
+from backend.agents.agent_tools import run_agentic_claude_json
 from backend.data.feedback_store import get_relevant_corrections
 from backend.models.research_program import AuditFlag, ProtocolStep, ResearchProgram
+from backend.rag.rag_engine import get_praxis_rag
 
 _PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
@@ -14,6 +15,30 @@ _PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 async def generate_protocol(program: ResearchProgram) -> list[ProtocolStep]:
     experiment_type = program.assay_type or "mic_assay"
     corrections = get_relevant_corrections(experiment_type, limit=5)
+
+    base_system_prompt = (_PROMPTS_DIR / "protocol.txt").read_text(encoding="utf-8")
+    system_prompt = base_system_prompt
+
+    rag = get_praxis_rag()
+    if rag:
+        try:
+            relevant_protocols = rag.query_protocols(
+                program.hypothesis,
+                program.assay_type or "general",
+            )
+            relevant_feedback = rag.query_feedback(
+                experiment_type,
+                "protocol_steps",
+            )
+            rag_context = "RELEVANT PROTOCOLS FROM DATABASE:\n"
+            for p in relevant_protocols:
+                rag_context += f"[{p['similarity']:.0%} match]\n{p['protocol']}\n\n"
+            rag_context += "PAST SCIENTIST CORRECTIONS:\n"
+            for f in relevant_feedback:
+                rag_context += f"- {f['protocol']}\n"
+            system_prompt = rag_context + "\n\n" + base_system_prompt
+        except Exception:  # pragma: no cover - optional stack
+            system_prompt = base_system_prompt
 
     corrections_context = ""
     if corrections:
@@ -29,7 +54,6 @@ SCIENTIST CORRECTIONS FROM PRIOR REVIEWS (apply these to improve this plan):
 """
         corrections_context += "\nApply these corrections when relevant to this experiment.\n"
 
-    system_prompt = (_PROMPTS_DIR / "protocol.txt").read_text(encoding="utf-8")
     if corrections_context:
         system_prompt = system_prompt + "\n\n" + corrections_context
     if program.feedback_few_shot:
@@ -37,6 +61,13 @@ SCIENTIST CORRECTIONS FROM PRIOR REVIEWS (apply these to improve this plan):
 
     if env_str("ANTHROPIC_API_KEY"):
         try:
+            agentic_system = (
+                system_prompt
+                + "\n\nYou have TOOLS (query_rag, search_literature, lookup_reagent, critique_plan, "
+                "emit_sse_event, …). Use them to ground protocol steps. When finished, output JSON ONLY:\n"
+                '{"steps":[{"title": str, "description": str, "volumes": str, "time": str, '
+                '"temperature": str, "equipment": [str], "controls": [str]}]} — at least 3 steps.'
+            )
             user = json.dumps(
                 {
                     "hypothesis": program.hypothesis,
@@ -48,13 +79,15 @@ SCIENTIST CORRECTIONS FROM PRIOR REVIEWS (apply these to improve this plan):
                 },
                 indent=2,
             )
-            user += (
-                "\n\nReturn JSON ONLY: {\"steps\": ["
-                '{"title": str, "description": str, "volumes": str, "time": str, '
-                '"temperature": str, "equipment": [str], "controls": [str]}'
-                "]} — at least 3 steps."
+            user += "\n\nUse tools as needed, then respond with the JSON object only."
+            out = await run_agentic_claude_json(
+                system_prompt=agentic_system,
+                user_message=user,
+                program=program,
+                rag=None,
+                max_iterations=10,
+                max_tokens=4096,
             )
-            out = await claude_messages_json(system=system_prompt, user=user, max_tokens=4096)
             raw_steps = (out.get("steps") if isinstance(out, dict) else out) or []
             built: list[ProtocolStep] = []
             for s in raw_steps:

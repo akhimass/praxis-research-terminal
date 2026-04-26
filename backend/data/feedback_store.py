@@ -3,11 +3,47 @@
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 DB_PATH = Path(__file__).parent / "praxis_feedback.db"
+
+
+def _push_section_reviews_to_rag(review: dict[str, Any]) -> None:
+    """Best-effort: embed 'wrong' corrections into Chroma feedback collection."""
+    try:
+        from backend.rag.rag_engine import get_praxis_rag
+    except Exception:
+        return
+    rag = get_praxis_rag()
+    if rag is None:
+        return
+    experiment_type = str(review.get("experiment_type") or "unknown")
+    for sr in review.get("section_reviews", []) or []:
+        if not isinstance(sr, dict):
+            continue
+        if str(sr.get("rating", "")).lower() != "wrong":
+            continue
+        correction_text = (sr.get("correction") or "").strip()
+        if not correction_text:
+            continue
+        try:
+            rag.add_correction(
+                {
+                    "id": uuid.uuid4().hex,
+                    "section": str(sr.get("section", "")),
+                    "original": str(sr.get("original_text", "")),
+                    "correction": correction_text,
+                    "reason": str(sr.get("reason", "")),
+                    "reviewer_role": str(review.get("reviewer_role", "unknown")),
+                    "severity": str(sr.get("severity", "medium")),
+                },
+                experiment_type,
+            )
+        except Exception:
+            pass
 
 
 def init_db() -> None:
@@ -93,6 +129,8 @@ def save_review(program_id: str, review: dict[str, Any]) -> bool:
             )
 
         conn.commit()
+
+        _push_section_reviews_to_rag(review)
         return True
     except Exception as e:  # pragma: no cover
         print(f"Review save failed: {e}")

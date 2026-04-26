@@ -27,6 +27,9 @@ class NoveltyReferenceItem(BaseModel):
     year: int | None = None
     pmid: str = ""
     url: str = ""
+    citation_count: int = 0
+    influential_citations: int = 0
+    tldr: str = ""
 
 
 class NoveltyData(BaseModel):
@@ -43,13 +46,19 @@ class QuantitativeClaim(BaseModel):
 
 
 class LiteraturePaper(BaseModel):
-    pmid: str
+    pmid: str = ""
+    s2_paper_id: str = ""
     title: str
     authors: str = ""
     journal: str = ""
     year: int | None = None
     abstract: str = ""
+    tldr: str = ""
+    citation_count: int = 0
+    influential_citations: int = 0
+    pdf_url: str = ""
     relevance_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    source: str = "tavily"
     quantitative_claims: list[QuantitativeClaim] = Field(default_factory=list)
 
 
@@ -316,6 +325,9 @@ def map_novelty(program: Any) -> dict[str, Any]:
                 year=getattr(p, "year", None),
                 pmid=str(getattr(p, "pmid", "") or "")[:32],
                 url=str(getattr(p, "url", "") or "")[:2048],
+                citation_count=int(getattr(p, "citation_count", 0) or 0),
+                influential_citations=int(getattr(p, "influential_citations", 0) or 0),
+                tldr=str(getattr(p, "tldr", "") or "")[:300],
             )
         )
     return NoveltyData(
@@ -338,12 +350,18 @@ def map_literature(program: Any) -> dict[str, Any]:
         papers.append(
             LiteraturePaper(
                 pmid=str(p.pmid or ""),
+                s2_paper_id=str(getattr(p, "s2_paper_id", "") or ""),
                 title=p.title,
                 authors=p.authors or "",
                 journal=str(journal),
                 year=p.year,
                 abstract=(p.abstract or "")[:4000],
+                tldr=str(getattr(p, "tldr", "") or "")[:300],
+                citation_count=int(getattr(p, "citation_count", 0) or 0),
+                influential_citations=int(getattr(p, "influential_citations", 0) or 0),
+                pdf_url=str(getattr(p, "pdf_url", "") or ""),
                 relevance_score=float(p.relevance_score or 0.0),
+                source=str(getattr(p, "source", "tavily") or "tavily"),
                 quantitative_claims=qcs,
             )
         )

@@ -1,6 +1,15 @@
+"""
+PRAXIS pipeline orchestrator.
+
+Literature and protocol phases use Claude **tool use** (see ``backend.agents.agent_tools``):
+Claude may call search_literature, query_rag, critique_plan, emit_sse_event, etc., in a loop
+before emitting final structured JSON. Other agents remain deterministic / parallel as before.
+"""
+
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from collections.abc import AsyncGenerator
 
@@ -56,6 +65,18 @@ async def run_praxis_pipeline(hypothesis: str) -> AsyncGenerator[dict, None]:
         dms = max(0, int((time.perf_counter() - t_start) * 1000))
         return make_trace(step=trace_i, agent=agent, action=action, finding=finding, duration_ms=dms)
 
+    def _drain_tool_sse(agent: str) -> list[dict]:
+        """Emit trace rows for ``emit_sse_event`` tool calls buffered on ``program``."""
+        buf = program.agent_tool_events[:]
+        program.agent_tool_events.clear()
+        rows: list[dict] = []
+        for ev in buf:
+            t0 = time.perf_counter()
+            et = str(ev.get("event_type", "tool"))
+            payload = json.dumps(ev.get("data") or {}, default=str)[:400]
+            rows.append(_sse("trace", _trace(agent, et, payload, t0)))
+        return rows
+
     # --- context ---
     t0 = time.perf_counter()
     try:
@@ -100,6 +121,8 @@ async def run_praxis_pipeline(hypothesis: str) -> AsyncGenerator[dict, None]:
     tamarind_body = map_tamarind(program)
     yield _sse("literature", map_literature(program))
     yield _sse("trace", _trace("LITERATURE", "Synthesize papers", f"{len(program.literature)} papers", t0))
+    for row in _drain_tool_sse("LITERATURE"):
+        yield row
     # defer tamarind event until after gtm per frontend ordering; keep payload
     tamarind_pending = tamarind_body
 
@@ -122,6 +145,8 @@ async def run_praxis_pipeline(hypothesis: str) -> AsyncGenerator[dict, None]:
     _t("protocol", timings, t0)
     yield _sse("protocol", map_protocol(program))
     yield _sse("trace", _trace("PROTOCOL", "Generate SOP", f"{len(program.protocols)} steps", t0))
+    for row in _drain_tool_sse("PROTOCOL"):
+        yield row
 
     # --- bioinformatics + timeline (parallel) ---
     t0 = time.perf_counter()

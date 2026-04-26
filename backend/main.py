@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
+import os
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, File, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.agents._env import load_praxis_env
 from backend.agents._llm import claude_text
@@ -18,7 +21,26 @@ from backend.data.feedback_store import get_relevant_corrections, get_stats, sav
 
 load_praxis_env()
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Praxis Backend", version="0.1.0")
+
+
+@app.on_event("startup")
+async def _startup_schedule_tavily_rag() -> None:
+    """Background Tavily → Chroma protocol indexing (non-blocking server boot)."""
+    s2_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY", "")
+    print(f"Semantic Scholar: {'✓ API key set' if s2_key else '⚠ no key (shared rate limit)'}")
+
+    async def _run() -> None:
+        try:
+            from backend.rag.tavily_indexer import run_startup_indexing
+
+            await run_startup_indexing()
+        except Exception:
+            logger.exception("Tavily RAG startup indexing task crashed")
+
+    app.state.tavily_rag_index_task = asyncio.create_task(_run())
 
 app.add_middleware(
     CORSMiddleware,
@@ -123,6 +145,13 @@ class HypothesisRequest(BaseModel):
     hypothesis: str
 
 
+class ModalScriptRequest(BaseModel):
+    """Body for ``POST /modal/run-script`` — PRAXIS-generated analysis code + optional input files."""
+
+    code: str = ""
+    data: dict[str, Any] = Field(default_factory=dict)
+
+
 async def _sse_stream(hypothesis: str) -> AsyncGenerator[str, None]:
     async for evt in run_praxis_pipeline(hypothesis):
         yield f"event: {evt['event']}\n"
@@ -143,6 +172,22 @@ async def root() -> dict[str, str]:
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/tamarind/test")
+async def test_tamarind() -> dict[str, Any]:
+    """Smoke-test Tamarind / RCSB structure path (uses demo ``GyrA`` sequence when no API key)."""
+    from backend.agents.tamarind_agent import run_tamarind_alphafold
+
+    result = await run_tamarind_alphafold("GyrA", "E. coli")
+    return {
+        "source": result.get("source"),
+        "has_pdb": result.get("pdb_string") is not None,
+        "residues": result.get("residue_count"),
+        "confidence": result.get("confidence_score"),
+        "plddt_mean": result.get("plddt_mean"),
+        "error": result.get("error"),
+    }
 
 
 @app.post("/pipeline/stream")
@@ -199,6 +244,64 @@ async def review_feedback(experiment_type: str) -> dict:
     feedback_store.seed_demo_corrections()
     rows = feedback_store.list_feedback_by_experiment(experiment_type)
     return {"experiment_type": experiment_type, "items": rows}
+
+
+@app.post("/modal/run-script")
+async def run_script_on_modal(request: ModalScriptRequest) -> dict[str, Any]:
+    """
+    Execute a generated analysis script on Modal (CPU image, sandboxed temp dir).
+    Frontend \"RUN IN CLOUD\" can POST ``{ \"code\": \"...\", \"data\": { \"foo.csv\": \"...\" } }``.
+    """
+    try:
+        from backend.modal_runner import execute_analysis_script
+    except ImportError as exc:
+        return {"success": False, "error": f"modal_runner unavailable: {exc}"}
+
+    try:
+        import modal
+
+        def _call() -> Any:
+            with modal.enable_output():
+                return execute_analysis_script.remote(
+                    script_code=request.code,
+                    input_data=request.data,
+                )
+
+        result = await asyncio.to_thread(_call)
+        return {"success": True, "result": result}
+    except Exception as exc:  # pragma: no cover - Modal auth / deploy
+        return {"success": False, "error": str(exc)}
+
+
+@app.post("/modal/run-scrna")
+async def run_scrna_on_modal(
+    file: UploadFile = File(..., description="AnnData .h5ad file"),
+    resolution: float = Query(0.5, ge=0.1, le=3.0, description="Leiden resolution"),
+) -> dict[str, Any]:
+    """
+    Run scRNA-seq preprocessing + UMAP + Leiden on a Modal T4.
+    Upload ``.h5ad`` as multipart form field ``file``.
+    """
+    try:
+        from backend.modal_runner import run_scrna_pipeline
+    except ImportError as exc:
+        return {"success": False, "error": f"modal_runner unavailable: {exc}"}
+
+    try:
+        import modal
+
+        raw = await file.read()
+
+        def _call() -> Any:
+            with modal.enable_output():
+                return run_scrna_pipeline.remote(raw, {"resolution": resolution})
+
+        result = await asyncio.to_thread(_call)
+        if isinstance(result, dict):
+            result.setdefault("success", True)
+        return result if isinstance(result, dict) else {"success": True, "result": result}
+    except Exception as exc:  # pragma: no cover
+        return {"success": False, "error": str(exc)}
 
 
 @app.post("/funding/generate-aims")
