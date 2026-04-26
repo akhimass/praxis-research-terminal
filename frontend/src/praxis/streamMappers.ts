@@ -180,11 +180,11 @@ export function mapStreamAgents(agentStates: Record<string, { state: string; dur
     "literature",
     "bioinformatics",
     "protocol",
+    "structure",
     "reagents",
     "timeline",
     "funding",
     "gtm",
-    "tamarind",
     "audit",
   ];
   const out = {} as Record<AgentId, AgentRecord>;

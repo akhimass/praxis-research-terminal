@@ -467,7 +467,12 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const AGENT_EVENTS: AgentId[] = ["context","literature","bioinformatics","protocol","reagents","timeline","funding","gtm"];
+const AGENT_EVENTS: AgentId[] = ["context","literature","bioinformatics","protocol","structure","reagents","timeline","funding","gtm","audit"];
+
+// Map SSE event types to agent IDs (for backwards compatibility)
+const SSE_EVENT_TO_AGENT: Record<string, AgentId> = {
+  tamarind: "structure",
+};
 
 function nowTs(): string {
   const d = new Date();
@@ -488,8 +493,11 @@ export function usePraxisPipeline() {
   }, []);
 
   const handleEvent = useCallback((evt: string, payload: any) => {
-    if (AGENT_EVENTS.includes(evt as AgentId)) {
-      const agent = evt as AgentId;
+    // Map SSE event names to agent IDs for backwards compatibility
+    const mappedEvt = SSE_EVENT_TO_AGENT[evt] ?? evt;
+    
+    if (AGENT_EVENTS.includes(mappedEvt as AgentId)) {
+      const agent = mappedEvt as AgentId;
       const phase = payload?.phase ?? (payload?.complete ? "complete" : "complete");
       if (phase === "running" || payload?.status === "running") {
         dispatch({ type: "AGENT_RUNNING", agent });
@@ -523,7 +531,11 @@ export function usePraxisPipeline() {
       }
       return;
     }
-    if (evt === "tamarind")    dispatch({ type: "TAMARIND", data: payload });
+    // Handle tamarind/structure events that came through as non-agent events
+    if (evt === "tamarind" || mappedEvt === "structure") {
+      dispatch({ type: "TAMARIND", data: payload });
+      dispatch({ type: "AGENT_COMPLETE", agent: "structure", data: payload });
+    }
     else if (evt === "audit")  dispatch({ type: "AUDIT", flags: payload?.flags ?? payload ?? [] });
     else if (evt === "key_finding") dispatch({ type: "KEY_FINDING", text: payload?.text ?? String(payload ?? "") });
     else if (evt === "trace")  dispatch({ type: "TRACE", entry: { ts: nowTs(), agent: payload?.agent ?? "system", message: payload?.message ?? String(payload ?? "") } });
@@ -586,62 +598,52 @@ export function usePraxisPipeline() {
         if (agent.id === "funding") dispatch({ type: "FUNDING", data: DEMO_FUNDING });
         if (agent.id === "gtm") dispatch({ type: "GTM", data: { tam: "1.2B", segments: ["clinical micro labs", "AMR surveillance"] } });
         if (agent.id === "bioinformatics") dispatch({ type: "BIOINFORMATICS", data: DEMO_SCRIPTS });
+        if (agent.id === "structure") {
+          // Fetch a real public PDB so the 3Dmol viewer has something to render in the demo.
+          // 1KZN = DNA gyrase B fragment with novobiocin — small, fast to load, biologically relevant.
+          fetch("https://files.rcsb.org/download/1KZN.pdb")
+            .then((r) => (r.ok ? r.text() : Promise.reject(new Error("PDB fetch failed"))))
+            .then((pdb) => {
+              dispatch({
+                type: "TAMARIND",
+                data: {
+                  pdb,
+                  confidence: 0.874,
+                  residues: 237,
+                  source: "TAMARIND BIO · ALPHAFOLD",
+                  proteinName: "GyrA · E. coli · D87N MUTANT",
+                  mutationSites: ["D87N", "S83L"],
+                },
+              });
+            })
+            .catch(() => {
+              dispatch({
+                type: "TAMARIND",
+                data: {
+                  confidence: 0.874,
+                  residues: 237,
+                  source: "TAMARIND BIO · ALPHAFOLD",
+                  proteinName: "GyrA · E. coli · D87N MUTANT",
+                  mutationSites: ["D87N", "S83L"],
+                  error: "Protein not found in AlphaFold database",
+                },
+              });
+            });
+        }
+        if (agent.id === "audit") {
+          dispatch({ type: "AUDIT", flags: [
+            { severity: "HIGH", title: "Missing vehicle control in step 01", detail: "Add DMSO vehicle to baseline growth comparison." },
+            { severity: "MEDIUM", title: "Sample size below CLSI recommendation", detail: "n=412 acceptable; replicates per isolate not specified." },
+            { severity: "LOW", title: "Reagent vendor lock-in", detail: "Single source for ciprofloxacin standard." },
+          ] });
+        }
       });
     });
 
-    at((t += 800), () => {
-      // Initial: structural job complete metadata, PDB streaming next.
-      dispatch({
-        type: "TAMARIND",
-        data: {
-          pdb: undefined,
-          confidence: 0.874,
-          residues: 237,
-          source: "TAMARIND BIO · ALPHAFOLD",
-          proteinName: "GyrA · E. coli · D87N MUTANT",
-          mutationSites: ["D87N", "S83L"],
-        },
-      });
-      // Fetch a real public PDB so the 3Dmol viewer has something to render in the demo.
-      // 1KZN = DNA gyrase B fragment with novobiocin — small, fast to load, biologically relevant.
-      fetch("https://files.rcsb.org/download/1KZN.pdb")
-        .then((r) => (r.ok ? r.text() : Promise.reject(new Error("PDB fetch failed"))))
-        .then((pdb) => {
-          dispatch({
-            type: "TAMARIND",
-            data: {
-              pdb,
-              confidence: 0.874,
-              residues: 237,
-              source: "TAMARIND BIO · ALPHAFOLD",
-              proteinName: "GyrA · E. coli · D87N MUTANT",
-              mutationSites: ["D87N", "S83L"],
-            },
-          });
-        })
-        .catch(() => {
-          dispatch({
-            type: "TAMARIND",
-            data: {
-              confidence: 0.874,
-              residues: 237,
-              source: "TAMARIND BIO · ALPHAFOLD",
-              proteinName: "GyrA · E. coli · D87N MUTANT",
-              mutationSites: ["D87N", "S83L"],
-              error: "Protein not found in AlphaFold database",
-            },
-          });
-        });
-    });
     at((t += 600), () => {
       dispatch({ type: "KEY_FINDING", text: "GyrA S83L confers 16× MIC shift; D87N adds 4× — combined haplotype dominates clinical isolates." });
     });
-    at((t += 600), () => {
-      dispatch({ type: "AUDIT", flags: [
-        { severity: "HIGH", title: "Missing vehicle control in step 01", detail: "Add DMSO vehicle to baseline growth comparison." },
-        { severity: "MEDIUM", title: "Sample size below CLSI recommendation", detail: "n=412 acceptable; replicates per isolate not specified." },
-        { severity: "LOW", title: "Reagent vendor lock-in", detail: "Single source for ciprofloxacin standard." },
-      ] });
+    at((t += 400), () => {
       dispatch({ type: "COMPLETE" });
       trace("system", "pipeline complete");
     });

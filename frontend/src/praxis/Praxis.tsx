@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Header } from "./Header";
-import { HypothesisInput } from "./HypothesisInput";
+import { HypothesisInput, HypothesisInputRef } from "./HypothesisInput";
 import { AgentPanel } from "./AgentPanel";
 import { TraceLog } from "./TraceLog";
 import { TabBar, TabId, TabDotStatus } from "./TabBar";
@@ -29,6 +29,11 @@ export function Praxis() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const hypothesisRef = useRef<HypothesisInputRef>(null);
+
+  const handleSelectHypothesis = (hypothesis: string) => {
+    hypothesisRef.current?.setValue(hypothesis);
+  };
 
   const anyData = Object.values(state.hasData).some(Boolean);
 
@@ -144,7 +149,7 @@ export function Praxis() {
       <div className="flex flex-1 min-h-0">
         {/* ZONE B */}
         <aside className="flex flex-col shrink-0 w-[320px] bg-surface-deep border-r border-border">
-          <HypothesisInput disabled={state.status === "RUNNING"} onRun={run} />
+          <HypothesisInput ref={hypothesisRef} disabled={state.status === "RUNNING"} onRun={run} />
           <AgentPanel agents={state.agents} />
           <TraceLog entries={state.trace} />
         </aside>
@@ -165,13 +170,16 @@ export function Praxis() {
             style={tab === "CODE" || tab === "BUDGET" || tab === "FUNDING" ? { padding: 0 } : { padding: 20 }}
           >
             {!anyData && state.status !== "RUNNING" ? (
-              <EmptyState />
+              <EmptyState 
+                onSelectHypothesis={handleSelectHypothesis}
+                textareaRef={hypothesisRef.current?.textareaRef}
+              />
             ) : tab === "SCIENCE" ? (
               <SkeletonWrapper isLoading={loading.SCIENCE} skeleton={<ScienceSkeleton />}>
                 <ScienceTab
                   papers={state.papers}
                   tamarind={state.tamarind}
-                  isStructureLoading={state.agents.bioinformatics?.state === "running"}
+                  isStructureLoading={state.agents.structure?.state === "running"}
                   literatureStatus={literatureStatus}
                   novelty={novelty}
                   hypothesisTerms={state.lastHypothesis ?? ""}

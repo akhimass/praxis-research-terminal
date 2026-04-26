@@ -3,11 +3,11 @@ export type AgentId =
   | "literature"
   | "bioinformatics"
   | "protocol"
+  | "structure"
   | "reagents"
   | "timeline"
   | "funding"
   | "gtm"
-  | "tamarind"
   | "audit";
 
 export type AgentState = "idle" | "running" | "complete" | "error";
@@ -151,12 +151,12 @@ export const AGENTS: AgentMeta[] = [
   { id: "literature",     index: "02", label: "LITERATURE",     color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
   { id: "bioinformatics", index: "03", label: "BIOINFORMATICS", color: "text-ax-green",  hsl: "var(--accent-green)",  hex: "#00d97e" },
   { id: "protocol",       index: "04", label: "PROTOCOL",       color: "text-ax-green",  hsl: "var(--accent-green)",  hex: "#00d97e" },
-  { id: "reagents",       index: "05", label: "REAGENTS",       color: "text-ax-amber",  hsl: "var(--accent-amber)",  hex: "#f0a500" },
-  { id: "timeline",       index: "06", label: "TIMELINE",       color: "text-ax-amber",  hsl: "var(--accent-amber)",  hex: "#f0a500" },
-  { id: "funding",        index: "07", label: "FUNDING",        color: "text-ax-green",  hsl: "var(--accent-green)",  hex: "#00d97e" },
-  { id: "gtm",            index: "08", label: "GTM",            color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
-  { id: "tamarind",       index: "09", label: "TAMARIND",       color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
-  { id: "audit",          index: "10", label: "AUDIT",          color: "text-ax-amber",  hsl: "var(--accent-amber)",  hex: "#f0a500" },
+  { id: "structure",      index: "05", label: "STRUCTURE",      color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
+  { id: "reagents",       index: "06", label: "REAGENTS",       color: "text-ax-amber",  hsl: "var(--accent-amber)",  hex: "#f0a500" },
+  { id: "timeline",       index: "07", label: "TIMELINE",       color: "text-ax-amber",  hsl: "var(--accent-amber)",  hex: "#f0a500" },
+  { id: "funding",        index: "08", label: "FUNDING",        color: "text-ax-green",  hsl: "var(--accent-green)",  hex: "#00d97e" },
+  { id: "gtm",            index: "09", label: "GTM",            color: "text-ax-blue",   hsl: "var(--accent-blue)",   hex: "#4d9fff" },
+  { id: "audit",          index: "10", label: "AUDIT",          color: "text-ax-purple", hsl: "var(--accent-purple)", hex: "#9d6fff" },
 ];
 
 export const AGENT_BY_ID: Record<AgentId, AgentMeta> = AGENTS.reduce(
