@@ -45,6 +45,14 @@ export interface Paper {
   relevance?: number; // 0-1
   abstract?: string;
   claims?: string[];
+  pmid?: string;
+  // Semantic Scholar fields
+  tldr?: string;
+  citation_count?: number;
+  influential_citations?: number;
+  pdf_url?: string;
+  source?: "semantic_scholar" | "tavily";
+  s2_paper_id?: string;
 }
 
 export interface ProtocolStep {

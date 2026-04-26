@@ -7,12 +7,21 @@ import { EvidenceLandscape } from "@/components/visualizations/EvidenceLandscape
 export type LiteratureStatus = "ok" | "no_results" | "api_error";
 export type NoveltySignal = "NOT FOUND" | "SIMILAR EXISTS" | "EXACT MATCH";
 
+interface NoveltyReference {
+  title: string;
+  authors?: string;
+  citation_count?: number;
+  influential_citations?: number;
+  tldr?: string;
+}
+
 interface Props {
   papers: Paper[];
   tamarind: TamarindData | null;
   isStructureLoading?: boolean;
   literatureStatus?: LiteratureStatus;
   novelty?: NoveltySignal;
+  noveltyRefs?: NoveltyReference[];
   hypothesisTerms?: string;
   onRetry?: () => void;
 }
@@ -21,6 +30,7 @@ export function ScienceTab({
   papers, tamarind, isStructureLoading = false,
   literatureStatus = "ok",
   novelty,
+  noveltyRefs,
   hypothesisTerms,
   onRetry,
 }: Props) {
@@ -31,6 +41,7 @@ export function ScienceTab({
           papers={papers}
           status={literatureStatus}
           novelty={novelty}
+          noveltyRefs={noveltyRefs}
           hypothesisTerms={hypothesisTerms}
           onRetry={onRetry}
         />
@@ -43,26 +54,68 @@ export function ScienceTab({
   );
 }
 
-function NoveltyBanner({ signal }: { signal: NoveltySignal }) {
+function NoveltyBanner({ signal, refs }: { signal: NoveltySignal; refs?: NoveltyReference[] }) {
   const icon = signal === "EXACT MATCH" ? "●" : signal === "SIMILAR EXISTS" ? "◐" : "●";
   const tone =
-    signal === "NOT FOUND" ? "border-foreground/60 text-foreground"   // good news
+    signal === "NOT FOUND" ? "border-foreground/60 text-foreground"
     : signal === "EXACT MATCH" ? "border-destructive/60 text-destructive"
     : "border-ax-amber/60 text-ax-amber";
+  
+  const showRefs = signal !== "NOT FOUND" && refs && refs.length > 0;
+  
   return (
-    <div className={`mb-3 inline-flex items-center gap-2 px-3 py-1.5 border ${tone} font-mono text-[10px] font-bold tracking-[0.18em] uppercase`}>
-      <span>NOVELTY:</span>
-      <span>[ {icon} {signal} ]</span>
+    <div className="mb-3">
+      <div className={`inline-flex items-center gap-2 px-3 py-1.5 border ${tone} font-mono text-[10px] font-bold tracking-[0.18em] uppercase`}>
+        <span>NOVELTY:</span>
+        <span>[ {icon} {signal} ]</span>
+      </div>
+      {showRefs && (
+        <div className="mt-2 flex flex-col gap-1.5">
+          {refs!.map((ref, i) => (
+            <div key={i} className="font-mono" style={{ paddingLeft: 12, borderLeft: "2px solid #2a4060" }}>
+              <div style={{ fontSize: 10, color: "#e2eaf5", marginBottom: 2 }}>{ref.title}</div>
+              {ref.authors && (
+                <div style={{ fontSize: 8, color: "#5a7a9a" }}>{ref.authors}</div>
+              )}
+              {(ref.citation_count ?? 0) > 0 && (
+                <div style={{ fontSize: 8, color: "#2a4060", marginTop: 2 }}>
+                  {ref.citation_count} citations
+                  {(ref.influential_citations ?? 0) > 10 && (
+                    <span style={{ color: "#f0a500" }}> · {ref.influential_citations} influential</span>
+                  )}
+                </div>
+              )}
+              {ref.tldr && (
+                <div 
+                  style={{ 
+                    fontSize: 9, 
+                    color: "#5a7a9a", 
+                    fontStyle: "italic", 
+                    marginTop: 3,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: "100%"
+                  }}
+                >
+                  {ref.tldr}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function LiteratureColumn({
-  papers, status, novelty, hypothesisTerms, onRetry,
+  papers, status, novelty, noveltyRefs, hypothesisTerms, onRetry,
 }: {
   papers: Paper[];
   status: LiteratureStatus;
   novelty?: NoveltySignal;
+  noveltyRefs?: NoveltyReference[];
   hypothesisTerms?: string;
   onRetry?: () => void;
 }) {
@@ -81,7 +134,7 @@ function LiteratureColumn({
         )}
       </div>
 
-      {novelty && <NoveltyBanner signal={novelty} />}
+      {novelty && <NoveltyBanner signal={novelty} refs={noveltyRefs} />}
 
       {status === "no_results" && papers.length === 0 && (
         <AgentError
@@ -116,21 +169,65 @@ function LiteratureColumn({
   );
 }
 
+function SourceBadge({ source }: { source?: "semantic_scholar" | "tavily" }) {
+  const isS2 = source === "semantic_scholar";
+  return (
+    <span
+      className="font-mono font-bold"
+      style={{
+        fontSize: 7,
+        padding: "2px 5px",
+        background: isS2 ? "#4d9fff18" : "#5a7a9a18",
+        border: `1px solid ${isS2 ? "#4d9fff44" : "#5a7a9a33"}`,
+        color: isS2 ? "#4d9fff" : "#5a7a9a",
+      }}
+    >
+      {isS2 ? "S2" : "WEB"}
+    </span>
+  );
+}
+
 function PaperCard({ paper }: { paper: Paper }) {
   const [open, setOpen] = useState(false);
+  const [tldrExpanded, setTldrExpanded] = useState(false);
   const rel = Math.max(0, Math.min(1, paper.relevance ?? 0));
+
+  const hasCitations = (paper.citation_count ?? 0) > 0;
+  const influential = paper.influential_citations ?? 0;
+  const influentialColor = influential >= 50 ? "#00d97e" : influential >= 10 ? "#f0a500" : "#2a4060";
+
+  const hasTldr = paper.tldr && paper.tldr.trim().length > 0;
+  const hasPdf = paper.pdf_url && paper.pdf_url.trim().length > 0;
+  const hasS2 = paper.s2_paper_id && paper.s2_paper_id.trim().length > 0;
+  const hasPmid = paper.pmid && /^\d+$/.test(paper.pmid.trim());
+
   return (
     <div
       className="cursor-pointer transition-all duration-150"
       style={{ background: "#0a0a0a", borderLeft: "3px solid #fafafa", padding: "12px 14px", borderTop: "1px solid #262626", borderRight: "1px solid #262626", borderBottom: "1px solid #262626" }}
       onClick={() => setOpen((o) => !o)}
     >
+      {/* Collapsed header */}
       <div className="flex gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-mono font-semibold" style={{ fontSize: 12, color: "#fafafa" }}>{paper.title}</div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="font-mono font-semibold" style={{ fontSize: 12, color: "#fafafa" }}>{paper.title}</div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <SourceBadge source={paper.source} />
+            </div>
+          </div>
           <div className="font-mono mt-1" style={{ fontSize: 9, color: "#a1a1a1" }}>
             {paper.authors} · {paper.journal} · {paper.year}
           </div>
+          {/* Citation stats line */}
+          {hasCitations && (
+            <div className="font-mono mt-1" style={{ fontSize: 8, color: "#2a4060" }}>
+              {paper.citation_count} citations
+              {influential > 0 && (
+                <span style={{ color: influentialColor }}> · {influential} influential</span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-center gap-1 shrink-0" title={`Relevance ${(rel * 100).toFixed(0)}%`}>
           <div style={{ width: 4, height: 40, background: "#262626", position: "relative" }}>
@@ -139,20 +236,113 @@ function PaperCard({ paper }: { paper: Paper }) {
           <span className="font-mono" style={{ fontSize: 8, color: "#a1a1a1" }}>{(rel * 100).toFixed(0)}</span>
         </div>
       </div>
+
+      {/* Expanded content */}
       {open && (
-        <div className="mt-3 pt-3 animate-praxis-fade" style={{ borderTop: "1px solid #262626" }}>
+        <div className="mt-3 pt-3 animate-praxis-fade" style={{ borderTop: "1px solid #262626" }} onClick={(e) => e.stopPropagation()}>
+          {/* TLDR section */}
+          {hasTldr && (
+            <div style={{ background: "#f0a50008", borderLeft: "2px solid #f0a500", padding: "8px 12px", marginBottom: 10 }}>
+              <span
+                className="font-mono font-extrabold"
+                style={{
+                  fontSize: 7,
+                  padding: "1px 6px",
+                  background: "#f0a50020",
+                  border: "1px solid #f0a50044",
+                  color: "#f0a500",
+                  display: "inline-block",
+                  marginBottom: 5,
+                }}
+              >
+                TLDR
+              </span>
+              <div
+                className="font-mono"
+                style={{
+                  fontSize: 11,
+                  color: "#e2eaf5",
+                  fontStyle: "italic",
+                  lineHeight: 1.6,
+                  ...(!tldrExpanded && {
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }),
+                }}
+              >
+                {paper.tldr}
+              </div>
+              {!tldrExpanded && paper.tldr && paper.tldr.length > 200 && (
+                <button
+                  className="font-mono mt-1"
+                  style={{ fontSize: 8, color: "#5a7a9a", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  onClick={(e) => { e.stopPropagation(); setTldrExpanded(true); }}
+                >
+                  READ MORE
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Abstract */}
           {paper.abstract && (
             <div className="font-mono mb-3" style={{ fontSize: 10, color: "#a1a1a1", lineHeight: 1.6 }}>
               {paper.abstract}
             </div>
           )}
+
+          {/* Quantitative claims */}
           {paper.claims && paper.claims.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mb-3">
               {paper.claims.map((c, i) => (
                 <span key={i} className="font-mono" style={{ fontSize: 9, padding: "3px 8px", background: "#a1a1a112", color: "#a1a1a1", border: "1px solid #a1a1a144" }}>
                   {c}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Action row with links */}
+          {(hasPdf || hasS2 || hasPmid) && (
+            <div className="flex gap-2.5" style={{ borderTop: "1px solid #1a2f50", paddingTop: 8, marginTop: 10 }}>
+              {hasPdf && (
+                <a
+                  href={paper.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-bold hover:underline"
+                  style={{ fontSize: 8, color: "#00d97e", textDecoration: "none" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ↗ OPEN PDF
+                </a>
+              )}
+              {hasS2 && (
+                <a
+                  href={`https://www.semanticscholar.org/paper/${paper.s2_paper_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-bold hover:underline"
+                  style={{ fontSize: 8, color: "#4d9fff", textDecoration: "none" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ↗ SEMANTIC SCHOLAR
+                </a>
+              )}
+              {hasPmid && (
+                <a
+                  href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-bold hover:underline"
+                  style={{ fontSize: 8, color: "#5a7a9a", textDecoration: "none" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ↗ PUBMED
+                </a>
+              )}
             </div>
           )}
         </div>
