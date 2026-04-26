@@ -31,12 +31,23 @@ async def _startup_schedule_tavily_rag() -> None:
     """Background Tavily → Chroma protocol indexing (non-blocking server boot)."""
     s2_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY", "")
     print(f"Semantic Scholar: {'✓ API key set' if s2_key else '⚠ no key (shared rate limit)'}")
+    enable_startup_indexing = os.environ.get("TAVILY_RAG_STARTUP_INDEX", "false").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    if not enable_startup_indexing:
+        print("Tavily RAG startup indexing: disabled (set TAVILY_RAG_STARTUP_INDEX=true to enable)")
+        app.state.tavily_rag_index_task = None
+        return
 
     async def _run() -> None:
         try:
             from backend.rag.tavily_indexer import run_startup_indexing
 
-            await run_startup_indexing()
+            # Run in a worker thread so model init/embedding work never blocks the ASGI loop.
+            await asyncio.to_thread(lambda: asyncio.run(run_startup_indexing()))
         except Exception:
             logger.exception("Tavily RAG startup indexing task crashed")
 
